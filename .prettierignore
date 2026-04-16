@@ -5,5 +5,11 @@ yarn.lock
 bun.lock
 bun.lockb
 
+# Tool / editor configs (per-user or tool-owned)
+.claude/
+.mcp.json
+.vscode/
+opencode.json
+
 # Miscellaneous
 /static/

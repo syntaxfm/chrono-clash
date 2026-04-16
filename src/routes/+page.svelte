@@ -1,5 +1,7 @@
-<main>
-	<nav aria-label="Demo">
-		<a href="/session/demo">Demo session</a>
-	</nav>
-</main>
+<script lang="ts">
+	import { resolve } from '$app/paths';
+</script>
+
+<nav>
+	<a href={resolve('/admin')}>Admin</a>
+</nav>

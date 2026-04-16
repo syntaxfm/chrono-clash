@@ -123,7 +123,7 @@ Recommendation: persist `session_index` on `StudySession` as a new optional fiel
 - The participant runner is picker-agnostic: each picker adapter emits normalized `YYYY-MM-DD` values; the runner only reads those.
 - On every emitted value, compare to `target_date_iso`.
 - The first emission equal to the target completes the challenge and stops the timer.
-- Each distinct emitted value *before* the matching one counts as one attempt (`attempt_count`).
+- Each distinct emitted value _before_ the matching one counts as one attempt (`attempt_count`).
 - Picker adapters may emit on any cadence appropriate to their input style (live-binding on each change for typed inputs, on blur/close/enter for calendar popovers). The runner does not care.
 - Track click count and keypress count per challenge run (see §8.5).
 - In Svelte, watch the current value reactively (for example with `$effect`) and complete on equality.
@@ -293,7 +293,7 @@ const STUDY_SESSION_RESOLVE = {
 
 ### 6.7 Integration With Existing App Schema
 
-- `RateDateAccountRoot.study_session_index` is a *reference* to the shared `StudySessionIndex` owned by the admin group — not an owned index under the admin's account.
+- `RateDateAccountRoot.study_session_index` is a _reference_ to the shared `StudySessionIndex` owned by the admin group — not an owned index under the admin's account.
   - `study_session_index?: StudySessionIndex` (optional, lazy-initialized per admin account on first load)
 - This is additive and compatible with existing data.
 - First-admin bootstrap flow:
