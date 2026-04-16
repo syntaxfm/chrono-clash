@@ -1,7 +1,7 @@
 import { Group, type Loaded } from 'jazz-tools';
 
 import { STUDY_CHALLENGE_GROUPS } from '$lib/components/date-picker-study/challenges';
-import { STUDY_PICKERS } from '$lib/components/date-picker-study/pickers';
+import { STUDY_PICKERS } from '$lib/components/date-picker-study/pickers/catalog';
 import {
 	STUDY_SESSION_INDEX_RESOLVE,
 	type StudySession,

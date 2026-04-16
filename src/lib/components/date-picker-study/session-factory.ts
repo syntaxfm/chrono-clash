@@ -6,7 +6,7 @@ import {
 	StudyInputRound,
 	StudySession
 } from '$lib/components/date-picker-study/schema';
-import { STUDY_INPUT_COUNT } from '$lib/components/date-picker-study/pickers';
+import { STUDY_INPUT_COUNT } from '$lib/components/date-picker-study/pickers/catalog';
 
 // Must match schema.ts. Kept in sync because the factory writes the version
 // explicitly into newly-created records — relying only on the schema default
