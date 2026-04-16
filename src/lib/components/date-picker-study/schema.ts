@@ -119,7 +119,6 @@ export const StudyInputRound = co.map({
 	rating_design: ratingValueSchema.optional(),
 	rating_ease_of_use: ratingValueSchema.optional(),
 	rating_magicalness: ratingValueSchema.optional(),
-	rating_submitted_at_ms: z.number().int().nonnegative().optional(),
 
 	runs: co.list(StudyChallengeRun)
 });

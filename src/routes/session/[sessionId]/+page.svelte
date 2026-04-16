@@ -5,7 +5,7 @@
 	import ChallengeRunner from '$lib/components/date-picker-study/challenge-runner/ChallengeRunner.svelte';
 	import CompletionScreen from '$lib/components/date-picker-study/participant/CompletionScreen.svelte';
 	import IdentityForm from '$lib/components/date-picker-study/participant/IdentityForm.svelte';
-	import RatingView from '$lib/components/date-picker-study/participant/RatingView.svelte';
+	import RatingForm from '$lib/components/date-picker-study/rating/RatingForm.svelte';
 	import { STUDY_SESSION_RESOLVE, StudySession } from '$lib/components/date-picker-study/schema';
 
 	const sessionId = $derived(page.params.sessionId ?? '');
@@ -28,7 +28,7 @@
 	{:else if session.status === 'in_progress'}
 		{@const round = session.rounds[session.current_round_index]}
 		{#if round?.status === 'awaiting_rating'}
-			<RatingView {session} />
+			<RatingForm {session} />
 		{:else}
 			<ChallengeRunner {session} />
 		{/if}
