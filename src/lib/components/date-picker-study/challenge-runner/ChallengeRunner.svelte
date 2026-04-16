@@ -9,6 +9,7 @@
 		markRunShown,
 		startRoundIfPending
 	} from '$lib/components/date-picker-study/engine/progression';
+	import { emitChallengeResolved } from '$lib/components/date-picker-study/metrics/emit';
 	import type { LoadedParticipantSession } from '$lib/components/date-picker-study/participant/start-session';
 	import { getPickerTagForId } from '$lib/components/date-picker-study/pickers/adapter';
 	import '$lib/components/date-picker-study/pickers/register';
@@ -71,6 +72,10 @@
 			if (normalized === activeRun.target_date_iso) {
 				const now = Date.now();
 				completeRun(activeRun, normalized, now);
+				// Snapshot the round index BEFORE the delayed advance so the
+				// metric's input_round_index reflects the round this challenge
+				// belonged to, not the one the engine has already advanced to.
+				emitChallengeResolved(session, session.current_round_index, activeRun);
 				window.setTimeout(() => {
 					advanceAfterCorrectChallenge(session, Date.now());
 				}, CHALLENGE_CONFIRMATION_DELAY_MS);

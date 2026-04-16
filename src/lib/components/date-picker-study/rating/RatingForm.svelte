@@ -1,5 +1,9 @@
 <script lang="ts">
 	import { completeRoundAfterRating } from '$lib/components/date-picker-study/engine/progression';
+	import {
+		emitRoundCompleted,
+		flushStudyMetrics
+	} from '$lib/components/date-picker-study/metrics/emit';
 	import type { LoadedParticipantSession } from '$lib/components/date-picker-study/participant/start-session';
 	import StarRating from '$lib/components/date-picker-study/rating/StarRating.svelte';
 
@@ -41,7 +45,23 @@
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (!round || !allSet) return;
+
+		// Pin the round ref + index BEFORE the engine advances current_round_index.
+		// completeRoundAfterRating closes this round and may flip session.status
+		// to 'completed' when it was the last one; the metric has to describe
+		// the round that was just completed, not whatever comes next.
+		const completedRound = round;
+		const completedRoundIndex = session.current_round_index;
+
 		completeRoundAfterRating(session, Date.now());
+		emitRoundCompleted(session, completedRoundIndex, completedRound);
+
+		// Spec §8.1: flush metrics on hard completion. Participants are on
+		// their way to closing the tab; without a flush, the buffered batch
+		// never makes it to Sentry.
+		if (session.status === 'completed') {
+			void flushStudyMetrics();
+		}
 	}
 </script>
 
