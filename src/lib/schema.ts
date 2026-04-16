@@ -2,31 +2,38 @@ import { co } from 'jazz-tools';
 
 import {
 	STUDY_SESSION_INDEX_RESOLVE,
+	StudySession,
 	StudySessionIndex
 } from '$lib/components/date-picker-study/schema';
 
-// Account root is kept minimal: one optional pointer to the study index.
-//
-// Optional (not required) because the pointer is lazy-initialized the first
-// time the admin creates a session. Jazz migration guidance warns that
-// migrations require write access, and new-account bootstrap runs before any
-// other write — making the field optional lets existing accounts load
-// unchanged and avoids an eager backfill.
-//
-// One pointer (not inlined fields) so the study index is its own CoValue
-// with its own identity. That keeps the root shape small and lets the index
-// be resolved independently from the rest of the account.
+// Account root holds the admin's private list of sessions they have created.
+// Per-session public access is attached when each session is created (see
+// admin-workspace.ts), not here.
 export const RateDateAccountRoot = co.map({
-	study_session_index: StudySessionIndex.optional()
+	study_session_index: StudySessionIndex
 });
 
-export const RateDateAccount = co.account({
-	profile: co.profile(),
-	root: RateDateAccountRoot
-});
+// Initialize the root on account creation. `creationProps` is only defined
+// on the very first run for an account; subsequent logins skip straight
+// through, so there's no idempotency guard to maintain.
+export const RateDateAccount = co
+	.account({
+		profile: co.profile(),
+		root: RateDateAccountRoot
+	})
+	.withMigration((account, creationProps) => {
+		if (!creationProps) return;
+		account.$jazz.set(
+			'root',
+			RateDateAccountRoot.create({
+				study_session_index: StudySessionIndex.create({
+					schema_version: 1,
+					sessions: co.list(StudySession).create([])
+				})
+			})
+		);
+	});
 
-// Account-level resolve chains straight through to the study index resolve
-// so a single load covers "log in and show the admin dashboard".
 export const RATE_DATE_ACCOUNT_RESOLVE = {
 	root: {
 		study_session_index: STUDY_SESSION_INDEX_RESOLVE

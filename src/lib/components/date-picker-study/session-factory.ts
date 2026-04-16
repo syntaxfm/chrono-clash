@@ -1,4 +1,4 @@
-import { co } from 'jazz-tools';
+import { co, type Account, type Group } from 'jazz-tools';
 
 import {
 	PLAIN_DATE_KEY_REGEX,
@@ -6,11 +6,7 @@ import {
 	StudyInputRound,
 	StudySession
 } from '$lib/components/date-picker-study/schema';
-
-// The study is fixed to three pickers by design (within-subject comparison
-// across all three per participant). Validated below at creation time rather
-// than inferred from the blueprint so mistakes fail loudly.
-const STUDY_INPUT_COUNT = 3;
+import { STUDY_INPUT_COUNT } from '$lib/components/date-picker-study/pickers';
 
 // Must match schema.ts. Kept in sync because the factory writes the version
 // explicitly into newly-created records — relying only on the schema default
@@ -47,12 +43,27 @@ export type StudyRoundBlueprint = {
 export type StudySessionBlueprint = {
 	created_by_account_id: string;
 	rounds: readonly StudyRoundBlueprint[];
+	// Zero-based position in StudySessionIndex.sessions at creation time.
+	// Caller reads `sessions.length` BEFORE calling the factory and passes it
+	// here so counterbalancing stays stable if sessions are later reordered or
+	// deleted (spec §3.2). Optional so tests can omit it.
+	session_index?: number;
 	created_at_ms?: number;
 	timezone?: string;
 	locale?: string;
 };
 
-type StudySessionCreateOptions = Parameters<typeof StudySession.create>[1];
+// Single ownership option threaded through every CoValue the factory creates
+// (the session, its rounds list, each round, its runs list, each run).
+//
+// Why one owner top-to-bottom: Jazz pre-created CoValues default to the active
+// account as owner. The study requires the admin group (and, via public
+// sharing on the session's group, participants) to read/write every nested
+// value. Without this thread, participants would hit "unauthorized" on round
+// / run reads and admin dashboards would only see their own account's data.
+export type StudySessionFactoryOptions = {
+	owner: Group | Account;
+};
 
 // Deterministic counterbalance assignment. Given the index of a newly-created
 // session in the account's StudySessionIndex (0-based), returns the picker
@@ -84,13 +95,9 @@ export function getPickerOrderForSession(sessionIndex: number): readonly [number
 // All validation is throw-on-bad-input with TypeError and a precise message.
 // This is a pre-study authoring step (admin running it); being loud beats
 // writing a broken session that corrupts later analysis.
-//
-// createOptions is passed through to StudySession.create so the caller chooses
-// ownership (group). Kept as the second positional arg to preserve Jazz's
-// native shape.
 export function createStudySession(
 	blueprint: StudySessionBlueprint,
-	createOptions?: StudySessionCreateOptions
+	options: StudySessionFactoryOptions
 ) {
 	const createdByAccountId = blueprint.created_by_account_id.trim();
 
@@ -105,6 +112,15 @@ export function createStudySession(
 	if (blueprint.rounds.length !== STUDY_INPUT_COUNT) {
 		throw new TypeError(`rounds must contain exactly ${STUDY_INPUT_COUNT} entries`);
 	}
+
+	if (
+		blueprint.session_index !== undefined &&
+		(!Number.isInteger(blueprint.session_index) || blueprint.session_index < 0)
+	) {
+		throw new TypeError('session_index must be a nonnegative integer');
+	}
+
+	const owner = options.owner;
 
 	const rounds = blueprint.rounds.map((round, roundIndex) => {
 		if (round.challenges.length === 0) {
@@ -133,33 +149,39 @@ export function createStudySession(
 				);
 			}
 
-			return StudyChallengeRun.create({
+			return StudyChallengeRun.create(
+				{
+					schema_version: STUDY_SCHEMA_VERSION,
+					run_index: runIndex,
+					challenge_group_id: challenge.challenge_group_id,
+					prompt_text: challenge.prompt_text,
+					target_date_iso: challenge.target_date_iso,
+					attempt_count: 0,
+					click_count: 0,
+					keypress_count: 0,
+					is_correct: false
+				},
+				{ owner }
+			);
+		});
+
+		const runsList = co.list(StudyChallengeRun).create(runs, { owner });
+
+		return StudyInputRound.create(
+			{
 				schema_version: STUDY_SCHEMA_VERSION,
-				run_index: runIndex,
-				challenge_group_id: challenge.challenge_group_id,
-				prompt_text: challenge.prompt_text,
-				target_date_iso: challenge.target_date_iso,
-				attempt_count: 0,
-				click_count: 0,
-				keypress_count: 0,
-				is_correct: false
-			});
-		});
-
-		const runsList = co.list(StudyChallengeRun).create(runs);
-
-		return StudyInputRound.create({
-			schema_version: STUDY_SCHEMA_VERSION,
-			round_index: roundIndex,
-			picker_id: round.picker_id,
-			picker_label: round.picker_label,
-			status: 'pending' as const,
-			current_challenge_index: 0,
-			runs: runsList
-		});
+				round_index: roundIndex,
+				picker_id: round.picker_id,
+				picker_label: round.picker_label,
+				status: 'pending' as const,
+				current_challenge_index: 0,
+				runs: runsList
+			},
+			{ owner }
+		);
 	});
 
-	const roundsList = co.list(StudyInputRound).create(rounds);
+	const roundsList = co.list(StudyInputRound).create(rounds, { owner });
 
 	return StudySession.create(
 		{
@@ -169,6 +191,7 @@ export function createStudySession(
 			// deterministic snapshots. In production the admin caller omits it
 			// and Date.now() wins.
 			created_at_ms: blueprint.created_at_ms ?? Date.now(),
+			session_index: blueprint.session_index,
 			// Session starts 'pending_participant' — created by admin but not
 			// yet claimed. The participant identity write on Start transitions
 			// to 'in_progress'.
@@ -178,6 +201,6 @@ export function createStudySession(
 			locale: blueprint.locale,
 			rounds: roundsList
 		},
-		createOptions
+		{ owner }
 	);
 }
