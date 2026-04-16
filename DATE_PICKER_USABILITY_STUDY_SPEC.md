@@ -43,7 +43,7 @@ Speed data is tracked in two places:
 
 - Natural language date parsing in-app.
 - Open-ended date interpretation with ambiguous rules.
-- Building a generic analytics warehouse in v1.
+- Building a generic analytics warehouse for this app.
 
 ## 3) Experiment Design
 
@@ -51,6 +51,9 @@ Speed data is tracked in two places:
 
 - Each participant completes all 3 inputs.
 - Participant identity is captured before start as `participant_id` + `first_name`.
+- Participants do not create accounts and do not sign in.
+- Participant access is session-link based (`/session/[sessionId]`) with no admin auth gate.
+- Session ID alone is the participant access key (no extra token/secret).
 
 ### 3.2 Input Order (Counterbalancing)
 
@@ -58,10 +61,14 @@ Use permutations of 3 pickers to reduce order bias:
 
 - `ABC`, `ACB`, `BAC`, `BCA`, `CAB`, `CBA`
 
+`session_index` is the zero-based position of the session in `StudySessionIndex.sessions` at creation time. The admin session-creation flow reads `sessions.length` before calling the factory and passes the resulting picker order into the blueprint via `getPickerOrderForSession(sessionIndex)`.
+
 Assignment options:
 
 - Recommended: assign order by `session_index % 6` for balanced distribution.
 - Acceptable fallback: random assignment if participant volume is low.
+
+Recommendation: persist `session_index` on `StudySession` as a new optional field in a future additive migration so later analysis doesn't depend on list order surviving edits.
 
 ### 3.3 Challenges Per Picker
 
@@ -70,17 +77,17 @@ Assignment options:
 
 ### 3.4 Challenge Sets
 
-- Prompts are authored as grouped prompt/answer variations.
-- Example group: `Next Monday in March plus 2 weeks`, `Next Friday in March plus 2 days`, and similar variants.
-- Each input round gets a different grouped set to reduce memory effects.
-- Sets should be matched for difficulty.
+- Challenges live in a static TS file at `src/lib/components/date-picker-study/challenges.ts`, exporting an array of challenge groups.
+- Each group contains a prompt template, a target date (`YYYY-MM-DD`), and optional variants at equivalent difficulty.
+- Admin session creation picks three groups (one per input round) so each round draws from a different group to reduce memory effects.
+- Difficulty parity across groups is a curation responsibility, not an algorithmic check.
 
 ## 4) User Flow
 
-1. Admin creates a session and shares the session URL.
+1. Admin (authenticated) creates a session; picker order + challenge assignments are generated and persisted immediately.
 2. Participant lands on identity screen.
 3. Participant enters `participant_id` and `first_name`, then clicks Start.
-4. System starts the session and assigns picker order + challenge sets.
+4. System starts the pre-assigned session plan.
 5. Participant sees input #1 and completes `X` challenges.
 6. Participant rates input #1 on 3 rubric dimensions.
 7. Repeat for input #2 with a different challenge set.
@@ -94,6 +101,10 @@ Assignment options:
 - Admin can create a durable session record before participant entry.
 - Admin can share the created session URL with a participant.
 - Participant identity is bound to the session on Start.
+- Participant flow must not require account signup or login.
+- Participant access uses Jazz public-readable ownership on the session CoValue. The random CoValue ID in `/session/[sessionId]` is the access credential; no separate token is added.
+- Participant writes (identity, timings, ratings) target the same CoValues via public-writable ownership. Verify against current Jazz behavior during implementation; fallback is a server-side writer proxy if anonymous writes aren't supported cleanly.
+- Picker order and challenge sets are assigned at session creation, not participant start.
 - Persist progress continuously (no manual save step).
 - Support reload/resume to exact challenge/input-round state.
 
@@ -109,11 +120,13 @@ Assignment options:
 
 - Show one challenge at a time.
 - Start timer when challenge is rendered and interactive.
-- Stop timer on first correct date selection.
-- Record attempt count (date changes before first correct answer).
-- Track click count and keypress count per challenge run.
-- Auto-complete challenge when normalized input value equals expected answer value.
-- In Svelte, watch current value reactively (for example with `$effect`) and complete on equality.
+- The participant runner is picker-agnostic: each picker adapter emits normalized `YYYY-MM-DD` values; the runner only reads those.
+- On every emitted value, compare to `target_date_iso`.
+- The first emission equal to the target completes the challenge and stops the timer.
+- Each distinct emitted value *before* the matching one counts as one attempt (`attempt_count`).
+- Picker adapters may emit on any cadence appropriate to their input style (live-binding on each change for typed inputs, on blur/close/enter for calendar popovers). The runner does not care.
+- Track click count and keypress count per challenge run (see §8.5).
+- In Svelte, watch the current value reactively (for example with `$effect`) and complete on equality.
 - Persist `elapsed_ms` in app data for each run.
 
 ### Input Integration
@@ -139,24 +152,25 @@ Assignment options:
 This schema plan follows Jazz MCP guidance for long-lived local-first apps:
 
 - model data as a graph of CoValues
-- keep ownership/group permissions explicit
+- keep ownership and access control explicit
 - prefer additive evolution only (no field renames/type changes)
 - keep migrations small and rare by shipping forward-compatible shapes first
 
 ### 6.1 Migration-Light Strategy (Preferred)
 
-- Add new study schemas first (`StudyWorkspace`, `StudySession`, `StudyInputRound`, `StudyChallengeRun`).
+- Add new study schemas first (`StudySession`, `StudyInputRound`, `StudyChallengeRun`).
 - Keep all future fields additive and optional.
 - Use CoValue IDs directly for participant URLs (`/session/[sessionId]`).
 - Migrations are allowed, but only for safe initialization and backfill (no destructive schema changes).
 
 ### 6.2 Ownership Model
 
-- `StudyWorkspace` is owned by an organization group (shared admin context).
-- `StudySession` uses the same owner as its workspace.
-- Admin creates sessions under that workspace.
-- Participant must be a member of that organization group to read/write session data.
-- If participant is external, invite to the organization first, then share `/session/[sessionId]`.
+- There is one shared admin group. Every admin human is a writer member of that group — you are either an admin or you are not.
+- The `StudySessionIndex` and every `StudySession` are owned by the admin group, not by the creating admin's account.
+- Any admin (writer member of the group) can read/write any session.
+- Participants do not join the admin group. They access sessions via the group's public-readable permission on `StudySession` (and its nested rounds/runs).
+- Participant access is link-based to `/session/[sessionId]`. The random CoValue ID is the access credential; no extra token/secret is added.
+- Admin routes (`/admin*`) require auth; participant routes (`/session/[sessionId]`) do not.
 
 ### 6.3 Exact Schema Blueprint (Field Contract)
 
@@ -244,17 +258,15 @@ export const StudySession = co.map({
 	rounds: co.list(StudyInputRound)
 });
 
-export const StudyWorkspace = co.map({
+export const StudySessionIndex = co.map({
 	schema_version: z.number().int().default(1),
-	organization_id: z.string(),
 	sessions: co.list(StudySession)
 });
 ```
 
-### 6.4 Workspace Resolution
+### 6.4 Session Resolution
 
-- Create/load one workspace per organization using deterministic lookup (`CoMap.getOrCreateUnique`) keyed by organization id.
-- Keep sessions discoverable from `StudyWorkspace.sessions`.
+- Keep sessions discoverable from `StudySessionIndex.sessions`.
 - Participant route loads a session directly by CoValue id from `/session/[sessionId]`.
 
 ### 6.5 Resolve Query Shape (Svelte `CoState`)
@@ -281,14 +293,17 @@ const STUDY_SESSION_RESOLVE = {
 
 ### 6.7 Integration With Existing App Schema
 
-- Keep study data org-centric by attaching one optional reference to existing `Organization` in `src/lib/schema.ts`:
-  - `study_workspace?: StudyWorkspace`
+- `RateDateAccountRoot.study_session_index` is a *reference* to the shared `StudySessionIndex` owned by the admin group — not an owned index under the admin's account.
+  - `study_session_index?: StudySessionIndex` (optional, lazy-initialized per admin account on first load)
 - This is additive and compatible with existing data.
-- Workspace creation flow:
-  1. Admin loads an organization.
-  2. If `organization.study_workspace` is missing, create it and set the field.
-  3. Create sessions under `study_workspace.sessions`.
-- Existing todo fields and behavior remain unchanged.
+- First-admin bootstrap flow:
+  1. First admin ever: creates the admin group and the shared `StudySessionIndex` under that group. Writes the reference to their account root.
+  2. Subsequent admins: resolve the existing shared index (via a well-known ID or invite acceptance — one-time per admin since there is only one group) and write the reference to their own root.
+- Runtime session-creation flow for any admin:
+  1. Admin account root loads.
+  2. Resolve `root.study_session_index` (creating it only on the first-admin path above).
+  3. Create sessions under `study_session_index.sessions`, owned by the admin group so every admin can read/write and participants can read via the group's public-readable permission.
+- Existing non-study fields and behavior remain unchanged.
 
 ## 7) Correctness Rules
 
@@ -350,9 +365,11 @@ For rating metrics only:
 ### 8.5 Instrumentation Rules (Clicks and Keypresses)
 
 - Interaction counters are scoped to the picker wrapper element only.
-- Each challenge runner must render a single wrapper element around the active picker instance (for example `data-study-picker-wrapper`).
-- `click_count` increments on each `click` event where `event.target` is inside the wrapper.
-- `keypress_count` increments on each `keydown` event where `event.target` is inside the wrapper.
+- Each challenge runner renders a single wrapper element around the active picker web component (for example `data-study-picker-wrapper`).
+- All three pickers are web components rendered as direct children of the wrapper. No picker opens its UI in a portal or body-attached popover. Trusted DOM events are `composed: true` and bubble out of shadow DOM; `event.target` from outside the shadow boundary resolves to the host element (inside the wrapper).
+- A single wrapper-scoped `addEventListener('click', …)` and `addEventListener('keydown', …)` correctly attribute all picker interactions.
+- `click_count` increments on each `click` event whose target is inside the wrapper.
+- `keypress_count` increments on each `keydown` event whose target is inside the wrapper.
 - Ignore keydown events for pure modifier keys: `Shift`, `Control`, `Alt`, `Meta`.
 - Do not count interactions outside the wrapper (including page-level shortcuts and other UI controls).
 - Reset `click_count` and `keypress_count` to `0` at challenge start.
@@ -383,14 +400,13 @@ For rating metrics only:
 - Share participant access link/code.
 - Realtime session list.
 - Per-session progress and status.
-- Basic export view for analysis.
 
 ### Styling
 
 - CSS details are intentionally out of scope for this document.
 - Prioritize clean semantic HTML and accessible structure.
 
-## 10) Route Structure and Modules (Complete v1)
+## 10) Route Structure and Modules
 
 ### Page Routes
 
@@ -403,7 +419,7 @@ For rating metrics only:
 
 - No subroutes under `/session/[sessionId]`.
 - Identity capture, challenge loop, rating loop, and completion all render inside `/session/[sessionId]` based on session state.
-- No dedicated API routes required for v1; session creation and progression use Jazz data directly.
+- No dedicated API routes required; session creation and progression use Jazz data directly.
 - Route rendering logic reads canonical workflow state from Jazz rather than local duplicated state.
 
 Feature colocation:
@@ -467,8 +483,8 @@ Feature colocation:
 - Pilot with internal participants
 - Tune challenge sets and defaults
 
-## 14) Open Decisions
+## 14) Locked Decisions
 
-- Final value for `X` challenges per picker.
-- Data export format (`csv`, `json`, or both).
-- Whether to collect optional free-text comments after each rating.
+- `challenges_per_picker` default is `5`, configurable per session at creation time.
+- No data export feature.
+- No free-text comment capture.
