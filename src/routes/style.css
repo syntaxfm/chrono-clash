@@ -19,3 +19,13 @@
 	padding: var(--pad-l) var(--pad-xxxl);
 	--fl: 4;
 }
+
+.back {
+	color: var(--fg);
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
