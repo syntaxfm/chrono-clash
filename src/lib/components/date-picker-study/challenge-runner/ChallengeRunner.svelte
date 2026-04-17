@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 
+	import { pickCongrats } from '$lib/components/date-picker-study/challenge-runner/congrats';
 	import type { StudyPickerElement } from '$lib/components/date-picker-study/engine/picker-protocol';
 	import {
 		CHALLENGE_CONFIRMATION_DELAY_MS,
@@ -26,6 +27,9 @@
 	// challenge without any parallel local pointer to reconcile.
 	const round = $derived(session.rounds[session.current_round_index]);
 	const run = $derived(round?.runs[round.current_challenge_index]);
+	// Deterministic per-run so the message is stable while the banner is
+	// visible but varies across challenges.
+	const congratsMessage = $derived(run ? pickCongrats(run.$jazz.id) : '');
 
 	let wrapperEl = $state<HTMLElement | undefined>(undefined);
 
@@ -137,12 +141,16 @@
 		{/key}
 	</div>
 	{#if run.is_correct}
-		<p transition:fly={{ y: 20, duration: 300, opacity: 0 }} role="status">Got it</p>
+		<p class="status" transition:fly={{ y: 20, opacity: 0 }} role="status">{congratsMessage}</p>
 	{/if}
 {/if}
 
 <style>
 	h1 {
 		margin-bottom: var(--vs-xl);
+	}
+
+	.status {
+		
 	}
 </style>

@@ -68,7 +68,22 @@
 			scale 0.2s;
 	}
 
-	label:is(.is-filled, :hover) {
+	label.is-filled {
+		opacity: 1;
+		color: var(--amber-9);
+		scale: 1.1;
+	}
+
+	/* While hovering any star, suppress the saved value so the hover preview is clean */
+	.flex:hover label.is-filled {
+		opacity: 0.4;
+		color: currentColor;
+		scale: 1;
+	}
+
+	/* Light the hovered star plus every earlier sibling */
+	.flex label:hover,
+	.flex label:has(~ label:hover) {
 		opacity: 1;
 		color: var(--amber-9);
 		scale: 1.1;

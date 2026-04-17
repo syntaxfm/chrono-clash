@@ -1254,7 +1254,7 @@ function Ii(n, e) {
     throw e !== void 0 ? new RangeError(`property '${e}' cannot be a a number less than one`) : new RangeError("Cannot convert a number less than one to a positive integer");
   return t;
 }
-function xe(n) {
+function Ye(n) {
   const e = jn(n);
   if (!tt(e)) throw new RangeError("infinity is out of range");
   if (!yt(e)) throw new RangeError(`unsupported fractional value ${n}`);
@@ -1272,7 +1272,7 @@ function ki(n) {
 function It(n) {
   return l.lessThan(n, ve) ? l.multiply(n, Gs) : n;
 }
-const Mi = /* @__PURE__ */ new Map([["year", ee], ["month", Ii], ["monthCode", rt], ["day", Ii], ["hour", ee], ["minute", ee], ["second", ee], ["millisecond", ee], ["microsecond", ee], ["nanosecond", ee], ["years", xe], ["months", xe], ["weeks", xe], ["days", xe], ["hours", xe], ["minutes", xe], ["seconds", xe], ["milliseconds", xe], ["microseconds", xe], ["nanoseconds", xe], ["era", rt], ["eraYear", _e], ["offset", rt]]), Xs = /* @__PURE__ */ new Map([["hour", 0], ["minute", 0], ["second", 0], ["millisecond", 0], ["microsecond", 0], ["nanosecond", 0]]), yr = [["years", "year", "date"], ["months", "month", "date"], ["weeks", "week", "date"], ["days", "day", "date"], ["hours", "hour", "time"], ["minutes", "minute", "time"], ["seconds", "second", "time"], ["milliseconds", "millisecond", "time"], ["microseconds", "microsecond", "time"], ["nanoseconds", "nanosecond", "time"]], Br = new Map(yr.map((n) => [n[0], n[1]])), Qs = new Map(yr.map(([n, e]) => [e, n])), Oi = yr.map(([, n]) => n), Ri = Array.from(Br.keys()).sort(), $i = /* @__PURE__ */ new Map();
+const Mi = /* @__PURE__ */ new Map([["year", ee], ["month", Ii], ["monthCode", rt], ["day", Ii], ["hour", ee], ["minute", ee], ["second", ee], ["millisecond", ee], ["microsecond", ee], ["nanosecond", ee], ["years", Ye], ["months", Ye], ["weeks", Ye], ["days", Ye], ["hours", Ye], ["minutes", Ye], ["seconds", Ye], ["milliseconds", Ye], ["microseconds", Ye], ["nanoseconds", Ye], ["era", rt], ["eraYear", _e], ["offset", rt]]), Xs = /* @__PURE__ */ new Map([["hour", 0], ["minute", 0], ["second", 0], ["millisecond", 0], ["microsecond", 0], ["nanosecond", 0]]), yr = [["years", "year", "date"], ["months", "month", "date"], ["weeks", "week", "date"], ["days", "day", "date"], ["hours", "hour", "time"], ["minutes", "minute", "time"], ["seconds", "second", "time"], ["milliseconds", "millisecond", "time"], ["microseconds", "microsecond", "time"], ["nanoseconds", "nanosecond", "time"]], Br = new Map(yr.map((n) => [n[0], n[1]])), Qs = new Map(yr.map(([n, e]) => [e, n])), Oi = yr.map(([, n]) => n), Ri = Array.from(Br.keys()).sort(), $i = /* @__PURE__ */ new Map();
 function $a(n) {
   let e = $i.get(n);
   return e === void 0 && (e = new _a("en-us", { timeZone: gr(n), hour12: !1, era: "short", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }), $i.set(n, e)), e;
@@ -1314,7 +1314,7 @@ function L(n) {
 function te(n) {
   return Pe(n, pa);
 }
-function Ye(n) {
+function $e(n) {
   return Pe(n, wa);
 }
 function x(n) {
@@ -1465,7 +1465,7 @@ function In(n) {
     let w = !1;
     for (const v of Ri) {
       const T = y[v];
-      T !== void 0 && (w = !0, p[v] = xe(T));
+      T !== void 0 && (w = !0, p[v] = Ye(T));
     }
     if (!w) throw new TypeError("invalid duration-like");
     return p;
@@ -1672,7 +1672,7 @@ function kt(n) {
 function xi(n, e) {
   let t = n;
   if (ce(t)) {
-    if (Ye(t)) return t;
+    if ($e(t)) return t;
     let c, d;
     if (Pe(t, b)) c = s(t, b), d = !1;
     else {
@@ -2083,7 +2083,7 @@ function zn(n, e, t) {
     return N(I("%Temporal.Calendar.prototype.monthDayFromFields%"), o, [e, t]);
   }
   let r = N(oe(n, "monthDayFromFields"), n, [e, t]);
-  if (!Ye(r)) throw new TypeError("invalid result");
+  if (!$e(r)) throw new TypeError("invalid result");
   return r;
 }
 function Ze(n) {
@@ -3198,10 +3198,10 @@ function ui(n) {
   return "hour" in n || "minute" in n || "second" in n || "timeStyle" in n || "dayPeriod" in n;
 }
 function Wn(n) {
-  return K(n) || we(n) || L(n) || x(n) || te(n) || Ye(n) || Re(n);
+  return K(n) || we(n) || L(n) || x(n) || te(n) || $e(n) || Re(n);
 }
 function ms(n, e) {
-  return !(!Wn(n) || !Wn(e)) && !(we(n) && !we(e)) && !(K(n) && !K(e)) && !(L(n) && !L(e)) && !(x(n) && !x(e)) && !(te(n) && !te(e)) && !(Ye(n) && !Ye(e)) && !(Re(n) && !Re(e));
+  return !(!Wn(n) || !Wn(e)) && !(we(n) && !we(e)) && !(K(n) && !K(e)) && !(L(n) && !L(e)) && !(x(n) && !x(e)) && !(te(n) && !te(e)) && !($e(n) && !$e(e)) && !(Re(n) && !Re(e));
 }
 function Fn(n, e) {
   const t = I("%Temporal.PlainDateTime%");
@@ -3215,7 +3215,7 @@ function Fn(n, e) {
     const c = new t(r, o, i, 12, 0, 0, 0, 0, 0, a);
     return { instant: nt(e[On], c, "compatible"), formatter: Mn(e, ss) };
   }
-  if (Ye(n)) {
+  if ($e(n)) {
     const r = s(n, M), o = s(n, $), i = s(n, Y), a = Ue(s(n, b));
     if (a !== e[Et]) throw new RangeError(`cannot format PlainMonthDay with calendar ${a} in locale with calendar ${e[Et]}`);
     const c = new t(r, o, i, 12, 0, 0, 0, 0, 0, a);
@@ -3423,18 +3423,18 @@ class ye {
   month(e) {
     let t = e;
     if (!ge(this)) throw new TypeError("invalid receiver");
-    if (Ye(t)) throw new TypeError("use monthCode on PlainMonthDay instead");
+    if ($e(t)) throw new TypeError("use monthCode on PlainMonthDay instead");
     return te(t) || (t = ae(t)), de[s(this, he)].month(t);
   }
   monthCode(e) {
     let t = e;
     if (!ge(this)) throw new TypeError("invalid receiver");
-    return te(t) || Ye(t) || (t = ae(t)), de[s(this, he)].monthCode(t);
+    return te(t) || $e(t) || (t = ae(t)), de[s(this, he)].monthCode(t);
   }
   day(e) {
     let t = e;
     if (!ge(this)) throw new TypeError("invalid receiver");
-    return Ye(t) || (t = ae(t)), de[s(this, he)].day(t);
+    return $e(t) || (t = ae(t)), de[s(this, he)].day(t);
   }
   era(e) {
     let t = e;
@@ -4757,7 +4757,7 @@ class Mr {
 jt(Mr, "Temporal.PlainDateTime");
 class nn {
   constructor(e = 0, t = 0, r = 0, o = 0, i = 0, a = 0, c = 0, d = 0, u = 0, h = 0) {
-    const m = e === void 0 ? 0 : xe(e), f = t === void 0 ? 0 : xe(t), g = r === void 0 ? 0 : xe(r), y = o === void 0 ? 0 : xe(o), p = i === void 0 ? 0 : xe(i), w = a === void 0 ? 0 : xe(a), v = c === void 0 ? 0 : xe(c), T = d === void 0 ? 0 : xe(d), E = u === void 0 ? 0 : xe(u), D = h === void 0 ? 0 : xe(h);
+    const m = e === void 0 ? 0 : Ye(e), f = t === void 0 ? 0 : Ye(t), g = r === void 0 ? 0 : Ye(r), y = o === void 0 ? 0 : Ye(o), p = i === void 0 ? 0 : Ye(i), w = a === void 0 ? 0 : Ye(a), v = c === void 0 ? 0 : Ye(c), T = d === void 0 ? 0 : Ye(d), E = u === void 0 ? 0 : Ye(u), D = h === void 0 ? 0 : Ye(h);
     Xr(m, f, g, y, p, w, v, T, E, D), Ut(this), W(this, Ve, m), W(this, Ne, f), W(this, ot, g), W(this, Ge, y), W(this, He, p), W(this, Ke, w), W(this, Xe, v), W(this, Qe, T), W(this, Je, E), W(this, et, D);
   }
   get years() {
@@ -4942,19 +4942,19 @@ class fi {
     Pa(this, ee(e), ee(t), dt(r), ee(o));
   }
   get monthCode() {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return br(s(this, b), this);
   }
   get day() {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return Er(s(this, b), this);
   }
   get calendarId() {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return Ue(s(this, b));
   }
   with(e, t) {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     if (!ce(e)) throw new TypeError("invalid argument");
     Kn(e);
     const r = X(t), o = s(this, b), i = ke(o, ["day", "month", "monthCode", "year"]);
@@ -4962,29 +4962,29 @@ class fi {
     return a = Dn(o, a, G(e, i, "partial")), a = G(a, i, []), zn(o, a, r);
   }
   equals(e) {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     const t = xi(e);
     for (const r of [$, Y, M])
       if (s(this, r) !== s(t, r)) return !1;
     return Cr(s(this, b), s(t, b));
   }
   toString(e) {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return Fi(this, pr(X(e)));
   }
   toJSON() {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return Fi(this);
   }
   toLocaleString(e, t) {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return new hn(e, t).format(this);
   }
   valueOf() {
     throw new TypeError("use equals() to compare Temporal.PlainMonthDay");
   }
   toPlainDate(e) {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     if (!ce(e)) throw new TypeError("argument should be an object");
     const t = s(this, b), r = ke(t, ["day", "monthCode"]), o = G(this, r, []), i = ke(t, ["year"]);
     let a = Dn(t, o, G(e, i, []));
@@ -4993,16 +4993,16 @@ class fi {
     return c.overflow = "reject", Kt(t, a, c);
   }
   getISOFields() {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return { calendar: s(this, b), isoDay: s(this, Y), isoMonth: s(this, $), isoYear: s(this, M) };
   }
   getCalendar() {
-    if (!Ye(this)) throw new TypeError("invalid receiver");
+    if (!$e(this)) throw new TypeError("invalid receiver");
     return Jn(s(this, b));
   }
   static from(e, t) {
     const r = X(t);
-    return Ye(e) ? (De(r), dr(s(e, $), s(e, Y), s(e, b), s(e, M))) : xi(e, r);
+    return $e(e) ? (De(r), dr(s(e, $), s(e, Y), s(e, b), s(e, M))) : xi(e, r);
   }
 }
 jt(fi, "Temporal.PlainMonthDay");
@@ -5682,7 +5682,7 @@ const Te = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", Sl = {
   saturday: 6,
   sat: 6
 };
-function $e(n, e = Te) {
+function xe(n, e = Te) {
   return Vn.Instant.fromEpochMilliseconds(n.getTime()).toZonedDateTimeISO(e);
 }
 function Ie(n) {
@@ -5763,31 +5763,23 @@ function Gn(n, e, t, r = 0, o = 0, i = Te) {
   return Ie(a);
 }
 function Mo(n) {
-  return $e(n, "UTC").toInstant().toString();
+  return xe(n, "UTC").toInstant().toString();
 }
 function Fr(n, e = Te) {
-  const t = $e(n, e);
+  const t = xe(n, e);
   return `${t.year}-${String(t.month).padStart(2, "0")}-${String(t.day).padStart(2, "0")}`;
 }
 function Ae(n, e, t, r = Te) {
-  const o = $e(n, r);
+  const o = xe(n, r);
   return Ie(t === "hour" ? o.add({ hours: e }) : t === "day" ? o.add({ days: e }) : t === "week" ? o.add({ weeks: e }) : t === "month" ? o.add({ months: e }) : o.add({ years: e }));
 }
 function jl(n, e = Te) {
-  const t = $e(n, e), r = t.hour !== 0 || t.minute !== 0, o = new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
     timeZone: e
-  });
-  return r ? new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: e
-  }).format(n) : o.format(n);
+  }).format(n);
 }
 function Ul(n, e, t = Te) {
   const r = new Intl.DateTimeFormat("en-US", {
@@ -5799,7 +5791,7 @@ function Ul(n, e, t = Te) {
   return a > 0 ? `${o} - ${i} (${a} days)` : `${o} - ${i}`;
 }
 function Gt(n, e = Te) {
-  const t = $e(n, e).with({
+  const t = xe(n, e).with({
     hour: 0,
     minute: 0,
     second: 0,
@@ -5810,16 +5802,16 @@ function Gt(n, e = Te) {
   return Ie(t);
 }
 function eo(n, e, t = Te) {
-  const r = Gt(n, t), o = $e(r, t), a = (Or(e) - o.dayOfWeek + 7) % 7, c = a === 0 ? 7 : a;
+  const r = Gt(n, t), o = xe(r, t), a = (Or(e) - o.dayOfWeek + 7) % 7, c = a === 0 ? 7 : a;
   return Ie(o.add({ days: c }));
 }
 function Ds(n, e, t = Te) {
-  const r = Gt(n, t), o = $e(r, t), i = Or(e);
+  const r = Gt(n, t), o = xe(r, t), i = Or(e);
   let a = (o.dayOfWeek - i + 7) % 7;
   return a === 0 && (a = 7), Ie(o.subtract({ days: a }));
 }
 function sa(n, e, t, r, o = Te) {
-  const i = $e(to(n, e, t, o), o);
+  const i = xe(to(n, e, t, o), o);
   return Ie(i.add({ days: (r - 1) * 7 }));
 }
 function la(n, e, t, r = Te) {
@@ -5840,11 +5832,11 @@ function la(n, e, t, r = Te) {
   return Ie(o);
 }
 function Oo(n, e, t, r, o = Te) {
-  const i = $e(n, o), a = sa(i.year, e, t, r, o);
+  const i = xe(n, o), a = sa(i.year, e, t, r, o);
   return a.getTime() > n.getTime() ? a : sa(i.year + 1, e, t, r, o);
 }
 function zl(n, e, t, r = Te) {
-  const o = $e(n, r), i = la(o.year, e, t, r);
+  const o = xe(n, r), i = la(o.year, e, t, r);
   return i.getTime() > n.getTime() ? i : la(o.year + 1, e, t, r);
 }
 function to(n, e, t, r = Te) {
@@ -5864,7 +5856,7 @@ function to(n, e, t, r = Te) {
   return Ie(o);
 }
 function ql(n, e, t, r = Te) {
-  const o = $e(n, r);
+  const o = xe(n, r);
   let i = o.year;
   if (e < o.month && (i += 1), e === o.month) {
     let a = o.add({ days: 1 }).with({
@@ -5886,7 +5878,7 @@ function ql(n, e, t, r = Te) {
   return to(i, e, t, r);
 }
 function mn(n, e, t, r = Te) {
-  const o = $e(n, r);
+  const o = xe(n, r);
   let i = o.year, a = Vn.ZonedDateTime.from({
     timeZone: r,
     year: i,
@@ -5909,12 +5901,12 @@ function mn(n, e, t, r = Te) {
   })), Ie(a);
 }
 function Bl(n, e = Te) {
-  const t = $e(n, e);
-  let r = t.year, o = $e(to(r, 9, 1, e), e);
-  return o.epochMilliseconds <= t.epochMilliseconds && (r += 1, o = $e(to(r, 9, 1, e), e)), Ie(o);
+  const t = xe(n, e);
+  let r = t.year, o = xe(to(r, 9, 1, e), e);
+  return o.epochMilliseconds <= t.epochMilliseconds && (r += 1, o = xe(to(r, 9, 1, e), e)), Ie(o);
 }
 function ca(n, e, t = Te) {
-  const r = $e(n, t);
+  const r = xe(n, t);
   return e < 1 || e > r.daysInMonth ? null : Ie(
     r.with({
       day: e,
@@ -5928,7 +5920,7 @@ function ca(n, e, t = Te) {
   );
 }
 function Cs(n, e, t = Te) {
-  const r = $e(Gt(n, t), t), o = e === "monday" ? 1 : 7, i = (r.dayOfWeek - o + 7) % 7;
+  const r = xe(Gt(n, t), t), o = e === "monday" ? 1 : 7, i = (r.dayOfWeek - o + 7) % 7;
   return Ie(r.subtract({ days: i }));
 }
 function Zl(n, e, t = Te) {
@@ -5936,7 +5928,7 @@ function Zl(n, e, t = Te) {
   return Ae(r, 6, "day", t);
 }
 function Wl(n, e = Te) {
-  const t = $e(n, e).with({
+  const t = xe(n, e).with({
     day: 1,
     hour: 0,
     minute: 0,
@@ -5948,7 +5940,7 @@ function Wl(n, e = Te) {
   return Ie(t);
 }
 function Vl(n, e = Te) {
-  const t = $e(n, e);
+  const t = xe(n, e);
   return Ie(
     t.with({
       day: t.daysInMonth,
@@ -5962,7 +5954,7 @@ function Vl(n, e = Te) {
   );
 }
 function Gl(n, e = Te) {
-  const t = $e(n, e).with({
+  const t = xe(n, e).with({
     month: 1,
     day: 1,
     hour: 0,
@@ -5975,7 +5967,7 @@ function Gl(n, e = Te) {
   return Ie(t);
 }
 function Hl(n, e = Te) {
-  const t = $e(n, e).with({
+  const t = xe(n, e).with({
     month: 12,
     day: 31,
     hour: 0,
@@ -5988,7 +5980,7 @@ function Hl(n, e = Te) {
   return Ie(t);
 }
 function Kl(n, e = Te) {
-  const t = Gt(n, e), r = $e(t, e), o = r.dayOfWeek % 7, i = r.subtract({ days: o }), a = i.subtract({ days: 1 });
+  const t = Gt(n, e), r = xe(t, e), o = r.dayOfWeek % 7, i = r.subtract({ days: o }), a = i.subtract({ days: 1 });
   return {
     start: Ie(a),
     end: Ie(i)
@@ -6928,13 +6920,13 @@ Is.innerHTML = `
       flex: 0 0 auto;
       opacity: 0.5;
     }
-    .ambiguity-list {
+    ::slotted([slot="ambiguity"]) {
       margin-top: 0.5rem;
       display: flex;
       flex-wrap: wrap;
       gap: 0.25rem;
     }
-    .ambiguity-list[hidden] {
+    ::slotted([slot="ambiguity"][hidden]) {
       display: none;
     }
 		p {
@@ -6946,7 +6938,7 @@ Is.innerHTML = `
     <div class="ghost" part="ghost" aria-live="polite"><span class="ghost-completion"><span class="ghost-typed" aria-hidden="true"></span><span class="ghost-tail"></span><kbd class="ghost-hint" part="hint" hidden>Tab</kbd></span><span class="ghost-resolution"></span></div>
   </div>
 	<p>Type any date format (mar 1 26, 3/1/26, christmas, xmas, xmas + 2)<br />Hit <kbd  class="ghost-hint" >Tab</kbd> to autocomplete.</p>
-  <div class="ambiguity-list" part="ambiguity-list" hidden></div>
+  <slot name="ambiguity"></slot>
 `;
 class Dc extends HTMLElement {
   static formAssociated = !0;
@@ -6981,10 +6973,10 @@ class Dc extends HTMLElement {
     const e = this.shadowRoot;
     if (!e)
       throw new Error("Unable to create shadow root.");
-    this.inputElement = e.querySelector("input") ?? document.createElement("input"), this.ghostTypedElement = e.querySelector(".ghost-typed") ?? document.createElement("span"), this.ghostTailElement = e.querySelector(".ghost-tail") ?? document.createElement("span"), this.ghostHintElement = e.querySelector(".ghost-hint") ?? document.createElement("kbd"), this.ghostResolutionElement = e.querySelector(".ghost-resolution") ?? document.createElement("span"), this.ambiguityElement = e.querySelector("[part='ambiguity-list']") ?? document.createElement("div"), this.internals = typeof this.attachInternals == "function" ? this.attachInternals() : null, this.bindEvents();
+    this.inputElement = e.querySelector("input") ?? document.createElement("input"), this.ghostTypedElement = e.querySelector(".ghost-typed") ?? document.createElement("span"), this.ghostTailElement = e.querySelector(".ghost-tail") ?? document.createElement("span"), this.ghostHintElement = e.querySelector(".ghost-hint") ?? document.createElement("kbd"), this.ghostResolutionElement = e.querySelector(".ghost-resolution") ?? document.createElement("span"), this.ambiguityElement = document.createElement("div"), this.ambiguityElement.setAttribute("slot", "ambiguity"), this.ambiguityElement.hidden = !0, this.internals = typeof this.attachInternals == "function" ? this.attachInternals() : null, this.bindEvents();
   }
   connectedCallback() {
-    this.syncInputPresentation(), this.parseAndRender();
+    this.ambiguityElement.parentNode !== this && this.append(this.ambiguityElement), this.syncInputPresentation(), this.parseAndRender();
   }
   attributeChangedCallback(e, t, r) {
     if (t !== r) {
@@ -7154,7 +7146,7 @@ class Dc extends HTMLElement {
     this.ambiguityElement.hidden = !1, this.parseState.ambiguityGroups.forEach((e) => {
       e.options.forEach((t) => {
         const r = document.createElement("button");
-        r.type = "button", r.setAttribute("part", "chip"), r.textContent = t.label, r.addEventListener("click", () => {
+        r.type = "button", r.textContent = t.label, r.addEventListener("click", () => {
           this.resolveAmbiguity(e.id, t.id);
         }), this.ambiguityElement.append(r);
       });
