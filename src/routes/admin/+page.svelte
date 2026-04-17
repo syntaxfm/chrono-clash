@@ -14,7 +14,7 @@
 
 <header>
 	<h1>Sessions</h1>
-	<a href={resolve('/admin/sessions/new')}>New session</a>
+	<a class="button success" href={resolve('/admin/sessions/new')}>New session</a>
 </header>
 
 {#if !me.current?.$isLoaded}

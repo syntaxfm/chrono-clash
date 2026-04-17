@@ -86,10 +86,10 @@
 
 	<section>
 		<h2>Participant link</h2>
-		<input readonly value={participantUrl} aria-label="Participant URL" />
-		<button type="button" onclick={copyUrl}>
-			{copyState === 'copied' ? 'Copied' : 'Copy'}
-		</button>
+		<div class="input-group">
+			<input readonly value={participantUrl} aria-label="Participant URL" />
+			<button type="button" onclick={copyUrl}> Copy </button>
+		</div>
 	</section>
 
 	<section>

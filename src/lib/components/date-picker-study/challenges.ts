@@ -22,9 +22,10 @@ export type StudyChallengeGroupDefinition = {
 	readonly challenges: readonly StudyChallengeDefinition[];
 };
 
-// Minimum challenges authored per group. Must be ≥ the default
-// challenges_per_picker (5) so every group supports a full-length round.
-const MIN_CHALLENGES_PER_GROUP = 5;
+// Minimum challenges authored per group. Must be ≥ STUDY_INPUT_COUNT (3)
+// because each round draws a different variation per category, indexed by
+// round_index (round 0 → challenge[0], round 1 → challenge[1], …).
+const MIN_CHALLENGES_PER_GROUP = 3;
 
 const RAW_CHALLENGE_GROUPS = [
 	{
@@ -73,6 +74,18 @@ const RAW_CHALLENGE_GROUPS = [
 			{ prompt: 'The Tuesday following July 4, 2026', target_date_iso: '2026-07-07' },
 			{ prompt: 'The Monday after Labor Day 2026', target_date_iso: '2026-09-14' },
 			{ prompt: 'The Friday before Christmas 2025', target_date_iso: '2025-12-19' }
+		]
+	},
+	{
+		id: 'end-of-month',
+		label: 'End Of Month',
+		challenges: [
+			{ prompt: 'The last day of February 2028', target_date_iso: '2028-02-29' },
+			{ prompt: 'The last day of November 2026', target_date_iso: '2026-11-30' },
+			{ prompt: 'The last day of October 2027', target_date_iso: '2027-10-31' },
+			{ prompt: 'The last day of April 2028', target_date_iso: '2028-04-30' },
+			{ prompt: 'The last day of August 2026', target_date_iso: '2026-08-31' },
+			{ prompt: 'The last day of January 2027', target_date_iso: '2027-01-31' }
 		]
 	}
 ] as const satisfies readonly StudyChallengeGroupDefinition[];

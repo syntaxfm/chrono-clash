@@ -4,6 +4,14 @@
 	let { children } = $props();
 </script>
 
-<PasskeyAuthBasicUI appName="Rate Date">
-	{@render children?.()}
-</PasskeyAuthBasicUI>
+<div class="stack">
+	<header class="header border">
+		<h1 class="h6">Chrono Clash</h1>
+	</header>
+
+	<div class="admin-layout layout-readable center">
+		<PasskeyAuthBasicUI appName="Rate Date">
+			{@render children?.()}
+		</PasskeyAuthBasicUI>
+	</div>
+</div>

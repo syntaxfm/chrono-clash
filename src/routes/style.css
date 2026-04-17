@@ -1,0 +1,21 @@
+:root {
+	color-scheme: light;
+
+	--bg: #ddd;
+}
+.header {
+	background: var(--white);
+	box-shadow: var(--shadow-1);
+}
+
+.admin-layout {
+	padding: var(--pad-xl);
+	box-shadow: var(--shadow-1);
+	border-radius: var(--br-l);
+	background: var(--white);
+}
+
+.big-boi {
+	padding: var(--pad-l) var(--pad-xxxl);
+	--fl: 4;
+}

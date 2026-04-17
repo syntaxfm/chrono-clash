@@ -1,7 +1,7 @@
 import { Group, type Loaded } from 'jazz-tools';
 
 import { STUDY_CHALLENGE_GROUPS } from '$lib/components/date-picker-study/challenges';
-import { STUDY_PICKERS } from '$lib/components/date-picker-study/pickers/catalog';
+import { STUDY_INPUT_COUNT, STUDY_PICKERS } from '$lib/components/date-picker-study/pickers/catalog';
 import {
 	STUDY_SESSION_INDEX_RESOLVE,
 	type StudySession,
@@ -13,9 +13,9 @@ import {
 	type StudyRoundBlueprint
 } from '$lib/components/date-picker-study/session-factory';
 
-// Matches the locked default from Dex task 7c3b5xi0: 5 challenges per picker,
-// overridable per session. Admin create page exposes the override; this
-// default applies when the caller doesn't pass one.
+// Number of categories sampled per round. Each round contains one challenge
+// from each sampled category, so this also equals the round length. Capped at
+// the authored group count by createAdminSession.
 export const DEFAULT_CHALLENGES_PER_PICKER = 5;
 
 export type LoadedStudySessionIndex = Loaded<
@@ -33,25 +33,38 @@ export type CreateAdminSessionOptions = {
 	createdAtMs?: number;
 };
 
-// Pick three distinct challenge groups for a new session. Deterministic
-// rotation keyed on sessionIndex so the group trio cycles smoothly (no random
-// cluster of same-topic groups in a row) and is reproducible from the session
-// record alone. Requires ≥ 3 authored groups; challenges.ts is responsible
-// for that.
+// Pick `count` distinct challenge groups for a new session. Deterministic
+// rotation keyed on sessionIndex so category sets cycle smoothly across
+// sessions and are reproducible from the session record alone. The same
+// category set is reused for every round in a session — what differs per
+// round is the variation index drawn from each group (see createAdminSession).
 function pickChallengeGroupsForSession(
-	sessionIndex: number
+	sessionIndex: number,
+	count: number
 ): readonly (typeof STUDY_CHALLENGE_GROUPS)[number][] {
-	if (STUDY_CHALLENGE_GROUPS.length < STUDY_PICKERS.length) {
+	const total = STUDY_CHALLENGE_GROUPS.length;
+	if (count > total) {
 		throw new Error(
-			`need at least ${STUDY_PICKERS.length} challenge groups, have ${STUDY_CHALLENGE_GROUPS.length}`
+			`requested ${count} categories but only ${total} challenge groups are authored`
 		);
 	}
 
-	const total = STUDY_CHALLENGE_GROUPS.length;
 	const start = sessionIndex % total;
-	return Array.from({ length: STUDY_PICKERS.length }, (_, offset) => {
+	return Array.from({ length: count }, (_, offset) => {
 		return STUDY_CHALLENGE_GROUPS[(start + offset) % total];
 	});
+}
+
+// Fisher-Yates in-place. Used to randomize the order of categories within a
+// round so picker A doesn't always start with the same category. Uses
+// Math.random because category-presentation order is not a counterbalanced
+// variable for analysis (picker order is — see getPickerOrderForSession).
+function shuffleInPlace<T>(items: T[]): T[] {
+	for (let i = items.length - 1; i > 0; i -= 1) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[items[i], items[j]] = [items[j], items[i]];
+	}
+	return items;
 }
 
 // Create a StudySession and append it to the admin's index.
@@ -84,25 +97,35 @@ export function createAdminSession(
 	const sessionIndex = index.sessions.length;
 
 	const pickerOrder = getPickerOrderForSession(sessionIndex);
-	const challengeGroupTrio = pickChallengeGroupsForSession(sessionIndex);
+	const sessionCategories = pickChallengeGroupsForSession(sessionIndex, challengesPerPicker);
+
+	// Each category must supply a distinct variation per round; round_index
+	// indexes into challenges[] (round 0 → [0], round 1 → [1], …), so a group
+	// with fewer than STUDY_INPUT_COUNT challenges would collide.
+	for (const group of sessionCategories) {
+		if (group.challenges.length < STUDY_INPUT_COUNT) {
+			throw new Error(
+				`challenge group "${group.id}" has ${group.challenges.length} challenges but ${STUDY_INPUT_COUNT} are needed`
+			);
+		}
+	}
 
 	const rounds: StudyRoundBlueprint[] = pickerOrder.map((pickerSlot, roundIndex) => {
 		const picker = STUDY_PICKERS[pickerSlot];
-		const group = challengeGroupTrio[roundIndex];
-		if (group.challenges.length < challengesPerPicker) {
-			throw new Error(
-				`challenge group "${group.id}" has ${group.challenges.length} challenges but ${challengesPerPicker} are needed`
-			);
-		}
+
+		const challenges = sessionCategories.map((group) => {
+			const challenge = group.challenges[roundIndex];
+			return {
+				challenge_group_id: group.id,
+				prompt_text: challenge.prompt,
+				target_date_iso: challenge.target_date_iso
+			};
+		});
 
 		return {
 			picker_id: picker.id,
 			picker_label: picker.label,
-			challenges: group.challenges.slice(0, challengesPerPicker).map((challenge) => ({
-				challenge_group_id: group.id,
-				prompt_text: challenge.prompt,
-				target_date_iso: challenge.target_date_iso
-			}))
+			challenges: shuffleInPlace(challenges)
 		};
 	});
 

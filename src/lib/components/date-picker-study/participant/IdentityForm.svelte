@@ -10,7 +10,6 @@
 
 	let { session }: Props = $props();
 
-	let participantId = $state('');
 	let participantFirstName = $state('');
 	let errorMessage = $state<string | null>(null);
 	let isStarting = $state(false);
@@ -21,7 +20,7 @@
 		isStarting = true;
 		errorMessage = null;
 		try {
-			startParticipantSession(session, { participantId, participantFirstName });
+			startParticipantSession(session, { participantFirstName });
 		} catch (error) {
 			isStarting = false;
 			errorMessage = error instanceof Error ? error.message : 'Could not start session.';
@@ -30,16 +29,6 @@
 </script>
 
 <form onsubmit={start}>
-	<label>
-		Participant ID
-		<input
-			type="text"
-			autocomplete="off"
-			required
-			bind:value={participantId}
-			disabled={isStarting}
-		/>
-	</label>
 	<label>
 		Name
 		<input

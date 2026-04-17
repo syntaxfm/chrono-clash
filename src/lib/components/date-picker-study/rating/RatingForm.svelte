@@ -67,7 +67,6 @@
 
 {#if round}
 	<form onsubmit={submit}>
-		<h1>Rate {round.picker_label}</h1>
 		<StarRating
 			name="{nameScope}-design"
 			legend="Design"
@@ -82,10 +81,22 @@
 		/>
 		<StarRating
 			name="{nameScope}-magical"
-			legend="Magicalness"
+			legend="Joy"
 			value={round.rating_magicalness}
 			onchange={(v) => setRating('rating_magicalness', v)}
 		/>
-		<button type="submit" disabled={!allSet}>Submit</button>
+		<button class="big-boi primary" type="submit" disabled={!allSet}>Submit</button>
 	</form>
 {/if}
+
+<style>
+	form {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		align-items: center;
+		button {
+			margin-top: 2rem;
+		}
+	}
+</style>

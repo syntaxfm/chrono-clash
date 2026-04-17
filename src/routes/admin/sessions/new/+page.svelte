@@ -37,17 +37,19 @@
 
 <header>
 	<h1>New session</h1>
-	<a href={resolve('/admin')}>Back</a>
 </header>
 
-<form onsubmit={create}>
+<form onsubmit={create} class="stack readable">
 	<label>
-		Challenges per picker
+		Challenges per round
 		<input type="number" min="1" max="20" step="1" required bind:value={challengesPerPicker} />
 	</label>
-	<button type="submit" disabled={isCreating}>
-		{isCreating ? 'Creating…' : 'Create session'}
-	</button>
+	<div class="flex">
+		<button type="submit" disabled={isCreating}>
+			{isCreating ? 'Creating…' : 'Create session'}
+		</button>
+		<a class="button error" href={resolve('/admin')}>Cancel</a>
+	</div>
 </form>
 
 {#if errorMessage}

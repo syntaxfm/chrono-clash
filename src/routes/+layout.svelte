@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '@drop-in/graffiti';
+	import './style.css';
 	import type { SyncConfig } from 'jazz-tools';
 	import { JazzSvelteProvider } from 'jazz-tools/svelte';
 

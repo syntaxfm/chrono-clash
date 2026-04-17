@@ -1,7 +1,1 @@
-<script lang="ts">
-	import { resolve } from '$app/paths';
-</script>
-
-<nav>
-	<a href={resolve('/admin')}>Admin</a>
-</nav>
+<p>Please wait for a session to be assigned to you.</p>

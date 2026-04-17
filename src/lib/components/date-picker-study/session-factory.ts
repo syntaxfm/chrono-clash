@@ -51,6 +51,9 @@ export type StudySessionBlueprint = {
 	created_at_ms?: number;
 	timezone?: string;
 	locale?: string;
+	// Optional override for tests that need a deterministic pseudonymous ID.
+	// In production the factory generates one via crypto.randomUUID().
+	participant_id?: string;
 };
 
 // Single ownership option threaded through every CoValue the factory creates
@@ -192,6 +195,10 @@ export function createStudySession(
 			// and Date.now() wins.
 			created_at_ms: blueprint.created_at_ms ?? Date.now(),
 			session_index: blueprint.session_index,
+			// Generated at creation so the participant never has to invent or
+			// look up an identifier. Stays pseudonymous (random UUID) and is
+			// stable for the session — metrics and admin display read it as-is.
+			participant_id: blueprint.participant_id ?? crypto.randomUUID(),
 			// Session starts 'pending_participant' — created by admin but not
 			// yet claimed. The participant identity write on Start transitions
 			// to 'in_progress'.

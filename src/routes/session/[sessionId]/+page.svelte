@@ -24,6 +24,8 @@
 {:else if sessionState.current.$isLoaded}
 	{@const session = sessionState.current}
 	{#if session.status === 'pending_participant'}
+		<h2>Hi, thank you for participating.</h2>
+		<p>Once you hit start, the session will begin.</p>
 		<IdentityForm {session} />
 	{:else if session.status === 'in_progress'}
 		{@const round = session.rounds[session.current_round_index]}
