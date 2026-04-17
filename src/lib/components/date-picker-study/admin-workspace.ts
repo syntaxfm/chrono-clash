@@ -1,6 +1,9 @@
 import { Group, type Loaded } from 'jazz-tools';
 
-import { STUDY_CHALLENGE_GROUPS } from '$lib/components/date-picker-study/challenges';
+import {
+	STUDY_CHALLENGE_GROUPS,
+	resolveChallengeTarget
+} from '$lib/components/date-picker-study/challenges';
 import { STUDY_INPUT_COUNT, STUDY_PICKERS } from '$lib/components/date-picker-study/pickers/catalog';
 import {
 	STUDY_SESSION_INDEX_RESOLVE,
@@ -96,6 +99,13 @@ export function createAdminSession(
 
 	const sessionIndex = index.sessions.length;
 
+	// Stamped once here, then threaded as both the factory's created_at_ms and
+	// the "now" passed to relative-time challenge resolvers, so every relative
+	// prompt in the session resolves against the exact moment the session is
+	// created (not a slightly-later wall clock inside the factory).
+	const createdAtMs = options.createdAtMs ?? Date.now();
+	const createdAt = new Date(createdAtMs);
+
 	const pickerOrder = getPickerOrderForSession(sessionIndex);
 	const sessionCategories = pickChallengeGroupsForSession(sessionIndex, challengesPerPicker);
 
@@ -118,7 +128,7 @@ export function createAdminSession(
 			return {
 				challenge_group_id: group.id,
 				prompt_text: challenge.prompt,
-				target_date_iso: challenge.target_date_iso
+				target_date_iso: resolveChallengeTarget(challenge, createdAt)
 			};
 		});
 
@@ -136,7 +146,7 @@ export function createAdminSession(
 		{
 			created_by_account_id: createdByAccountId,
 			session_index: sessionIndex,
-			created_at_ms: options.createdAtMs,
+			created_at_ms: createdAtMs,
 			rounds
 		},
 		{ owner: sessionGroup }

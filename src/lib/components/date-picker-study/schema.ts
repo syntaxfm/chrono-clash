@@ -14,6 +14,15 @@ const STUDY_SCHEMA_VERSION = 1;
 // normalize at read-time and picker adapters must emit this exact shape.
 export const PLAIN_DATE_KEY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
+// Accepts either a single plain date key (YYYY-MM-DD) OR a range expressed
+// as two plain date keys joined by a slash (YYYY-MM-DD/YYYY-MM-DD). Range
+// challenges and single-date challenges share the same string field — the
+// presence of "/" is the discriminator, so no schema shape change is needed
+// to support both. Picker adapters for range-capable inputs must emit the
+// range form; single-date adapters keep emitting plain keys.
+export const STUDY_TARGET_VALUE_REGEX =
+	/^\d{4}-\d{2}-\d{2}(?:\/\d{4}-\d{2}-\d{2})?$/;
+
 // Session and round statuses are kept as two separate enums on purpose.
 // Session-level states like 'abandoned' don't apply to a single round, and
 // round-level states like 'awaiting_rating' don't apply to the whole session.
@@ -66,7 +75,7 @@ export const StudyChallengeRun = co.map({
 	run_index: z.number().int().nonnegative(),
 	challenge_group_id: z.string(),
 	prompt_text: z.string(),
-	target_date_iso: z.string().regex(PLAIN_DATE_KEY_REGEX),
+	target_date_iso: z.string().regex(STUDY_TARGET_VALUE_REGEX),
 
 	shown_at_ms: z.number().int().nonnegative().optional(),
 	completed_at_ms: z.number().int().nonnegative().optional(),
@@ -76,7 +85,7 @@ export const StudyChallengeRun = co.map({
 	click_count: z.number().int().nonnegative().default(0),
 	keypress_count: z.number().int().nonnegative().default(0),
 
-	final_value_iso: z.string().regex(PLAIN_DATE_KEY_REGEX).optional(),
+	final_value_iso: z.string().regex(STUDY_TARGET_VALUE_REGEX).optional(),
 	is_correct: z.boolean().default(false)
 });
 

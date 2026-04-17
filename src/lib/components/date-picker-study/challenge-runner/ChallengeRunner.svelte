@@ -13,7 +13,8 @@
 	import type { LoadedParticipantSession } from '$lib/components/date-picker-study/participant/start-session';
 	import { getPickerTagForId } from '$lib/components/date-picker-study/pickers/adapter';
 	import '$lib/components/date-picker-study/pickers/register';
-	import { normalizePlainDateKey } from '$lib/utils/date-normalization';
+	import { normalizeStudyTargetValue } from '$lib/utils/date-normalization';
+	import { fly } from 'svelte/transition';
 
 	type Props = {
 		session: LoadedParticipantSession;
@@ -66,7 +67,7 @@
 			if (!pickerEl) return;
 			const raw = pickerEl.value;
 			if (typeof raw !== 'string' || raw.length === 0) return;
-			const normalized = normalizePlainDateKey(raw);
+			const normalized = normalizeStudyTargetValue(raw);
 			if (normalized === null) return;
 
 			if (normalized === activeRun.target_date_iso) {
@@ -108,17 +109,19 @@
 			activeRun.$jazz.set('keypress_count', (activeRun.keypress_count ?? 0) + 1);
 		}
 
-		// Listen for both `input` (live-binding pickers) and `change` (commit
-		// pickers like calendar popovers). Same handler runs for both; dupes
-		// with identical values are filtered by the attemptedValues set.
-		el.addEventListener('input', onPickerValueChange);
-		el.addEventListener('change', onPickerValueChange);
+		// Listen for the set of commit-signal events any conforming picker
+		// may fire: `input` (live-binding), `change` (native commit pickers),
+		// and `value-commit` (custom-element pickers that only expose a
+		// committed value on an explicit commit, e.g. hot-date). Same
+		// handler for all; dupes with identical values are filtered by the
+		// attemptedValues set.
+		const changeEvents = ['input', 'change', 'value-commit'] as const;
+		for (const name of changeEvents) el.addEventListener(name, onPickerValueChange);
 		el.addEventListener('click', onWrapperClick);
 		el.addEventListener('keydown', onWrapperKeydown);
 
 		return () => {
-			el.removeEventListener('input', onPickerValueChange);
-			el.removeEventListener('change', onPickerValueChange);
+			for (const name of changeEvents) el.removeEventListener(name, onPickerValueChange);
 			el.removeEventListener('click', onWrapperClick);
 			el.removeEventListener('keydown', onWrapperKeydown);
 		};
@@ -126,7 +129,7 @@
 </script>
 
 {#if round && run}
-	<p>{round.current_challenge_index + 1} / {round.runs.length}</p>
+	<p class="center">{round.current_challenge_index + 1} / {round.runs.length}</p>
 	<h1>{run.prompt_text}</h1>
 	<div bind:this={wrapperEl} data-study-picker-wrapper data-picker-id={round.picker_id}>
 		{#key run.$jazz.id}
@@ -134,6 +137,12 @@
 		{/key}
 	</div>
 	{#if run.is_correct}
-		<p role="status">Got it</p>
+		<p transition:fly={{ y: 20, duration: 300, opacity: 0 }} role="status">Got it</p>
 	{/if}
 {/if}
+
+<style>
+	h1 {
+		margin-bottom: var(--vs-xl);
+	}
+</style>

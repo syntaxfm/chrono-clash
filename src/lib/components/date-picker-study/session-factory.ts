@@ -1,7 +1,7 @@
 import { co, type Account, type Group } from 'jazz-tools';
 
 import {
-	PLAIN_DATE_KEY_REGEX,
+	STUDY_TARGET_VALUE_REGEX,
 	StudyChallengeRun,
 	StudyInputRound,
 	StudySession
@@ -144,11 +144,12 @@ export function createStudySession(
 		// the exact run to resume without generating anything new. Runtime
 		// only flips fields via $jazz.set — it never appends runs mid-session.
 		const runs = round.challenges.map((challenge, runIndex) => {
-			// Target date format is enforced at creation so the correctness
-			// engine never has to handle malformed targets at run time.
-			if (!PLAIN_DATE_KEY_REGEX.test(challenge.target_date_iso)) {
+			// Target value format is enforced at creation so the correctness
+			// engine never has to handle malformed targets at run time. Accepts
+			// single dates (YYYY-MM-DD) or ranges (YYYY-MM-DD/YYYY-MM-DD).
+			if (!STUDY_TARGET_VALUE_REGEX.test(challenge.target_date_iso)) {
 				throw new TypeError(
-					`challenge ${runIndex} in round ${roundIndex} target_date_iso must use YYYY-MM-DD format`
+					`challenge ${runIndex} in round ${roundIndex} target_date_iso must use YYYY-MM-DD or YYYY-MM-DD/YYYY-MM-DD format`
 				);
 			}
 

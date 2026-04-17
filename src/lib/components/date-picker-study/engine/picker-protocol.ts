@@ -2,10 +2,11 @@
 //
 // The runner reads the picker's `value` property (string, YYYY-MM-DD or
 // loosely formatted — normalized downstream by date-normalization.ts). It
-// knows to re-read by listening for the standard `input` and `change` DOM
-// events on the wrapper element; any installed form-like web component
-// fires one or both already, so no custom event name or detail payload is
-// required.
+// knows to re-read by listening for `input`, `change`, or `value-commit`
+// on the wrapper element — any one is enough. Native / form-like web
+// components fire `input`/`change`; commit-only components that gate the
+// canonical value behind an explicit commit step (e.g. hot-date) fire
+// `value-commit`. No custom event detail payload is required.
 //
 // Why read the property instead of an event detail: property-backed web
 // components are the norm (native <input>, @github elements, shoelace,
@@ -16,7 +17,9 @@
 //
 // Requirements on picker implementations:
 //   - Expose a `value: string` property reflecting the current selection.
-//   - Fire `input` and/or `change` DOM events when the value changes.
+//   - Fire `input`, `change`, or `value-commit` when the committed value
+//     changes. The property must already reflect the new value at the
+//     moment the event dispatches (the runner reads it synchronously).
 //   - Events should bubble (default for these event types). If the picker
 //     uses shadow DOM, ensure the events are dispatched with
 //     `composed: true` so they cross the shadow boundary; all standard

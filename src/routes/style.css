@@ -10,9 +10,10 @@
 
 .admin-layout {
 	padding: var(--pad-xl);
-	box-shadow: var(--shadow-1);
+	box-shadow: var(--shadow-4);
 	border-radius: var(--br-l);
 	background: var(--white);
+	margin: var(--vs-xl) auto;
 }
 
 .big-boi {
@@ -28,4 +29,96 @@
 	gap: 10px;
 	font-weight: 700;
 	text-transform: uppercase;
+}
+
+h1 {
+	text-align: center;
+}
+
+:where(th, td) {
+	white-space: nowrap;
+}
+
+.table {
+	box-shadow: var(--shadow-4);
+	border: 0;
+}
+
+tr {
+	transition: background 0.2s;
+}
+
+:where(tbody tr:nth-child(even)) {
+	background: var(--fg-05);
+}
+:where(tbody tr:hover) {
+	background: var(--fg-1);
+}
+
+.center {
+	text-align: center;
+}
+
+hot-date {
+	display: block;
+}
+
+a:not(.button) {
+	color: var(--blue);
+	text-decoration: none;
+	&:hover {
+		text-decoration-line: underline;
+		text-decoration-thickness: 4px;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 500ms;
+		animation-timing-function: linear(
+			0,
+			0.006,
+			0.025 2.07%,
+			0.101 4.42%,
+			0.539 13.75%,
+			0.725 18.1%,
+			0.893 22.86%,
+			1.016 27.74%,
+			1.091 32.86%,
+			1.119 36.08%,
+			1.127 39.3%,
+			1.117 42.05%,
+			1.094 45.03%,
+			0.982 56.97%,
+			0.961 61.3%,
+			0.951 65.72%,
+			0.952 70.48%,
+			0.963 76.26%,
+			1.001 93.49%,
+			1
+		);
+	}
+
+	::view-transition-old(root) {
+		animation-name: vt-fly-down;
+	}
+
+	::view-transition-new(root) {
+		animation-name: vt-fly-up;
+	}
+
+	@keyframes vt-fly-down {
+		to {
+			opacity: 0;
+			transform: translateY(50px);
+		}
+	}
+
+	@keyframes vt-fly-up {
+		from {
+			opacity: 0;
+			transform: translateY(50px);
+		}
+	}
 }

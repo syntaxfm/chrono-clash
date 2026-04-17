@@ -1,8 +1,11 @@
 import { STUDY_PICKERS } from '$lib/components/date-picker-study/pickers/catalog';
 
-// Map a stable picker_id (input_a) to a valid custom-element tag
-// (study-input-a). Custom-element names require a hyphen; we namespace under
-// `study-` so app-level custom elements can never collide with picker tags.
+// Map a stable picker_id (hot_date) to its custom-element tag (hot-date).
+// Custom-element names require a hyphen; picker_ids are snake_case, so
+// replacing underscores yields a valid tag that matches the picker bundle's
+// natural name. External bundles (like hot-date.js) self-register under that
+// same tag, so our derived tag composes directly with the bundle's own
+// registration — no extra subclassing required.
 //
 // The mapping is derived from STUDY_PICKERS rather than hand-maintained so
 // adding a fourth picker (unlikely given the within-subject design, but
@@ -12,7 +15,7 @@ export function getPickerTagForId(pickerId: string): string {
 	if (!picker) {
 		throw new Error(`unknown picker_id "${pickerId}"`);
 	}
-	return `study-${picker.id.replace(/_/g, '-')}`;
+	return picker.id.replace(/_/g, '-');
 }
 
 // Contract every picker web component must satisfy to work with the
@@ -23,9 +26,9 @@ export function getPickerTagForId(pickerId: string): string {
 //    composed events). No portals / body-attached popovers — the wrapper-
 //    scoped click/keypress listeners won't see interactions outside the
 //    wrapper (spec §8.5).
-// 3. Dispatches the study-picker-change CustomEvent (see picker-protocol.ts)
-//    with { bubbles: true, composed: true } on every candidate value the
-//    participant produces. Cadence is adapter's choice.
+// 3. Exposes a string `value` property and fires `input`, `change`, or
+//    `value-commit` (bubbles + composed) when that value updates. See
+//    engine/picker-protocol.ts for the full property/event contract.
 //
 // This interface is documentation-only — TypeScript can't enforce that an
 // HTMLElement subclass dispatches a specific event. Adapter tests (and the

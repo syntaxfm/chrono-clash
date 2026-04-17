@@ -16,6 +16,8 @@
 
 	function start(event: SubmitEvent) {
 		event.preventDefault();
+		console.log(isStarting);
+		console.log(participantFirstName);
 		if (isStarting) return;
 		isStarting = true;
 		errorMessage = null;
@@ -28,22 +30,38 @@
 	}
 </script>
 
-<form onsubmit={start}>
-	<label>
-		Name
-		<input
-			type="text"
-			autocomplete="given-name"
-			required
-			bind:value={participantFirstName}
-			disabled={isStarting}
-		/>
-	</label>
-	<button type="submit" disabled={isStarting}>
-		{isStarting ? 'Starting…' : 'Start'}
-	</button>
-</form>
+<div class="readable">
+	<h1>Hi {participantFirstName}, thank you <br /> for joining our study.</h1>
+	<p class="center">Once you hit start, the session will begin.</p>
 
-{#if errorMessage}
-	<p role="alert">{errorMessage}</p>
-{/if}
+	<form onsubmit={start} class="stack">
+		<label>
+			Name
+			<input
+				type="text"
+				autocomplete="given-name"
+				required
+				bind:value={participantFirstName}
+				disabled={isStarting}
+			/>
+		</label>
+		<button
+			class="big-boi success"
+			type="submit"
+			disabled={isStarting}
+			style="margin: 0 auto; display: block;"
+		>
+			{isStarting ? 'Starting…' : 'Start'}
+		</button>
+	</form>
+
+	{#if errorMessage}
+		<p role="alert">{errorMessage}</p>
+	{/if}
+</div>
+
+<style>
+	.readable {
+		margin: 0 auto;
+	}
+</style>

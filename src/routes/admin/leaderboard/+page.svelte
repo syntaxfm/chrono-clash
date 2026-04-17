@@ -1,0 +1,216 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+	import { AccountCoState } from 'jazz-tools/svelte';
+
+	import CompositeBarChart from '$lib/components/date-picker-study/leaderboard/CompositeBarChart.svelte';
+	import { PICKER_COLOR } from '$lib/components/date-picker-study/leaderboard/picker-colors';
+	import RatingsBarChart from '$lib/components/date-picker-study/leaderboard/RatingsBarChart.svelte';
+	import SpeedBarChart from '$lib/components/date-picker-study/leaderboard/SpeedBarChart.svelte';
+	import SpeedByCategoryChart from '$lib/components/date-picker-study/leaderboard/SpeedByCategoryChart.svelte';
+	import { RATE_DATE_ACCOUNT_RESOLVE, RateDateAccount } from '$lib/schema';
+	import {
+		aggregatePickerLeaderboard,
+		aggregateSpeedByCategory
+	} from '$lib/utils/leaderboard-aggregation';
+
+	const me = new AccountCoState(RateDateAccount, { resolve: RATE_DATE_ACCOUNT_RESOLVE });
+
+	const rows = $derived.by(() => {
+		const cur = me.current;
+		if (!cur?.$isLoaded) return [];
+		return aggregatePickerLeaderboard(cur.root.study_session_index.sessions);
+	});
+
+	const speedByCategory = $derived.by(() => {
+		const cur = me.current;
+		if (!cur?.$isLoaded) return [];
+		return aggregateSpeedByCategory(cur.root.study_session_index.sessions);
+	});
+
+	const ranked = $derived([...rows].sort((a, b) => b.composite_score - a.composite_score));
+	const totalSessions = $derived.by(() => {
+		const cur = me.current;
+		if (!cur?.$isLoaded) return 0;
+		return cur.root.study_session_index.sessions.length;
+	});
+	const totalSamples = $derived(rows.reduce((sum, r) => sum + r.sample_size, 0));
+
+	function fmtPercent(n: number): string {
+		return `${(n * 100).toFixed(0)}%`;
+	}
+
+	function fmtSeconds(ms: number): string {
+		if (ms === 0) return '—';
+		return `${(ms / 1000).toFixed(2)}s`;
+	}
+</script>
+
+<a class="back" href={resolve('/admin')}
+	><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"
+		><title>arrow-bold-left</title><g fill="currentColor"
+			><path
+				d="M15.25 5.99995H9.99997V4.00695C9.99997 3.52895 9.73397 3.09995 9.30597 2.88695C8.87897 2.67495 8.37597 2.72195 7.99497 3.01095L1.41397 8.00395C1.09997 8.24195 0.919983 8.60495 0.919983 8.99995C0.919983 9.39495 1.09997 9.75695 1.41397 9.99595L7.99497 14.9889C8.21797 15.1579 8.48196 15.2439 8.74896 15.2439C8.93696 15.2439 9.12897 15.2009 9.30597 15.1129C9.73497 14.8999 9.99997 14.4709 9.99997 13.9929V11.9999H15.25C16.215 11.9999 17 11.2149 17 10.2499V7.74995C17 6.78495 16.215 5.99995 15.25 5.99995Z"
+				fill-opacity="0.4"
+			></path></g
+		></svg
+	>Back</a
+>
+
+<h1>Leaderboard</h1>
+
+{#if !me.current?.$isLoaded}
+	<p>Loading…</p>
+{:else if totalSessions === 0}
+	<p>No sessions yet.</p>
+{:else if totalSamples === 0}
+	<p>No rounds have been completed yet.</p>
+{:else}
+	<dl class="summary">
+		<div>
+			<dt>Sessions</dt>
+			<dd>{totalSessions}</dd>
+		</div>
+		<div>
+			<dt>Rounds scored</dt>
+			<dd>{totalSamples}</dd>
+		</div>
+	</dl>
+
+	<section>
+		<h2>Composite score</h2>
+		<p class="hint">Sum of design, ease of use, and magicalness means — out of 15.</p>
+		<CompositeBarChart rows={ranked} pickerColor={PICKER_COLOR} />
+	</section>
+
+	<section>
+		<h2>Rating breakdown</h2>
+		<p class="hint">Mean rating per dimension across every completed round.</p>
+		<div class="legend">
+			{#each ranked as row (row.picker_id)}
+				<span class="swatch">
+					<span class="dot" style:background={PICKER_COLOR[row.picker_id]}></span>
+					{row.picker_label}
+				</span>
+			{/each}
+		</div>
+		<RatingsBarChart rows={ranked} pickerColor={PICKER_COLOR} />
+	</section>
+
+	<section>
+		<h2>Overall speed</h2>
+		<p class="hint">Mean time per challenge — shorter is better.</p>
+		<SpeedBarChart rows={ranked} pickerColor={PICKER_COLOR} />
+	</section>
+
+	{#if speedByCategory.length > 0}
+		<section>
+			<h2>Speed by category</h2>
+			<p class="hint">Mean time per challenge, broken down by challenge type.</p>
+			<div class="legend">
+				{#each ranked as row (row.picker_id)}
+					<span class="swatch">
+						<span class="dot" style:background={PICKER_COLOR[row.picker_id]}></span>
+						{row.picker_label}
+					</span>
+				{/each}
+			</div>
+			<SpeedByCategoryChart rows={speedByCategory} pickerColor={PICKER_COLOR} />
+		</section>
+	{/if}
+
+	<section>
+		<h2>Details</h2>
+		<div class="table">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Rank</th>
+						<th scope="col">Picker</th>
+						<th scope="col">Composite</th>
+						<th scope="col">Design</th>
+						<th scope="col">Ease</th>
+						<th scope="col">Magic</th>
+						<th scope="col">Correct</th>
+						<th scope="col">Avg time</th>
+						<th scope="col">Rounds</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each ranked as row, i (row.picker_id)}
+						<tr>
+							<td>{i + 1}</td>
+							<td>
+								<span class="dot" style:background={PICKER_COLOR[row.picker_id]}></span>
+								{row.picker_label}
+							</td>
+							<td>{row.composite_score.toFixed(2)}</td>
+							<td>{row.rating_design_mean.toFixed(2)}</td>
+							<td>{row.rating_ease_of_use_mean.toFixed(2)}</td>
+							<td>{row.rating_magicalness_mean.toFixed(2)}</td>
+							<td>{fmtPercent(row.correctness_rate)} ({row.runs_correct}/{row.runs_total})</td>
+							<td>{fmtSeconds(row.mean_elapsed_ms)}</td>
+							<td>{row.sample_size}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</section>
+{/if}
+
+<style>
+	h1 {
+		margin: 0;
+	}
+	section {
+		margin-block-start: var(--pad-xl);
+	}
+	h2 {
+		margin-block-end: var(--pad-xs);
+	}
+	.hint {
+		margin: 0 0 var(--pad-l);
+		color: var(--gray-6, oklch(0.55 0 0));
+	}
+	.summary {
+		display: flex;
+		gap: var(--pad-xl);
+		margin: 0;
+	}
+	.summary div {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.summary dt {
+		margin: 0;
+		font-size: 0.85em;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--gray-6, oklch(0.55 0 0));
+	}
+	.summary dd {
+		margin: 0;
+		font-size: 1.75rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--pad-l);
+		margin-block-end: var(--pad-m);
+		font-weight: 600;
+	}
+	.swatch {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--pad-s);
+	}
+	.dot {
+		display: inline-block;
+		width: 0.75em;
+		height: 0.75em;
+		border-radius: 999px;
+	}
+</style>

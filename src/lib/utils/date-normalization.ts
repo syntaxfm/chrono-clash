@@ -34,3 +34,27 @@ export function normalizePlainDateKey(value: string): string | null {
 export function plainDateKeysEqual(a: string, b: string): boolean {
 	return isPlainDateKey(a) && isPlainDateKey(b) && a === b;
 }
+
+// Study targets are either a single plain date key or a range expressed as
+// "YYYY-MM-DD/YYYY-MM-DD". The presence of "/" is the discriminator, which
+// lets the runner compare picker output to a stored target by string
+// equality without a parallel "is this a range?" flag.
+export function isRangeStudyTargetValue(value: string): boolean {
+	return value.includes('/');
+}
+
+// Normalize a picker-emitted value for the study. Delegates to
+// normalizePlainDateKey for single dates; for ranges, splits on "/",
+// normalizes each half, and rejoins. Returns null on any malformed half so
+// the runner treats partial/invalid emissions as "not yet a candidate".
+export function normalizeStudyTargetValue(value: string): string | null {
+	if (!isRangeStudyTargetValue(value)) {
+		return normalizePlainDateKey(value);
+	}
+	const parts = value.split('/');
+	if (parts.length !== 2) return null;
+	const start = normalizePlainDateKey(parts[0]);
+	const end = normalizePlainDateKey(parts[1]);
+	if (start === null || end === null) return null;
+	return `${start}/${end}`;
+}

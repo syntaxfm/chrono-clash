@@ -10,7 +10,7 @@
 // to vary per cohort without invalidating history because analysis keys off
 // `id`.
 export const STUDY_PICKERS = [
-	{ id: 'input_a', label: 'Input A' },
+	{ id: 'hot_date', label: 'Hot Date' },
 	{ id: 'input_b', label: 'Input B' },
 	{ id: 'input_c', label: 'Input C' }
 ] as const;
