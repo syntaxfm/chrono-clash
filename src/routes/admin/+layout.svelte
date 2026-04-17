@@ -4,8 +4,8 @@
 	let { children } = $props();
 </script>
 
-<div class="admin-layout layout-readable center">
-	<PasskeyAuthBasicUI appName="Rate Date">
+<PasskeyAuthBasicUI appName="Rate Date">
+	<div class="admin-layout layout-readable center">
 		{@render children?.()}
-	</PasskeyAuthBasicUI>
-</div>
+	</div>
+</PasskeyAuthBasicUI>
