@@ -7,10 +7,12 @@
 	import RatingsBarChart from '$lib/components/date-picker-study/leaderboard/RatingsBarChart.svelte';
 	import SpeedBarChart from '$lib/components/date-picker-study/leaderboard/SpeedBarChart.svelte';
 	import SpeedByCategoryChart from '$lib/components/date-picker-study/leaderboard/SpeedByCategoryChart.svelte';
+	import SpeedByPromptChart from '$lib/components/date-picker-study/leaderboard/SpeedByPromptChart.svelte';
 	import { RATE_DATE_ACCOUNT_RESOLVE, RateDateAccount } from '$lib/schema';
 	import {
 		aggregatePickerLeaderboard,
-		aggregateSpeedByCategory
+		aggregateSpeedByCategory,
+		aggregateSpeedByPrompt
 	} from '$lib/utils/leaderboard-aggregation';
 
 	const me = new AccountCoState(RateDateAccount, { resolve: RATE_DATE_ACCOUNT_RESOLVE });
@@ -25,6 +27,12 @@
 		const cur = me.current;
 		if (!cur?.$isLoaded) return [];
 		return aggregateSpeedByCategory(cur.root.study_session_index.sessions);
+	});
+
+	const speedByPrompt = $derived.by(() => {
+		const cur = me.current;
+		if (!cur?.$isLoaded) return [];
+		return aggregateSpeedByPrompt(cur.root.study_session_index.sessions);
 	});
 
 	const ranked = $derived([...rows].sort((a, b) => b.composite_score - a.composite_score));
@@ -118,6 +126,24 @@
 		</section>
 	{/if}
 
+	{#if speedByPrompt.length > 0}
+		<section>
+			<h2>Speed by prompt</h2>
+			<p class="hint">
+				Mean time per prompt, only prompts attempted by two or more pickers. Slowest first.
+			</p>
+			<div class="legend">
+				{#each ranked as row (row.picker_id)}
+					<span class="swatch">
+						<span class="dot" style:background={PICKER_COLOR[row.picker_id]}></span>
+						{row.picker_label}
+					</span>
+				{/each}
+			</div>
+			<SpeedByPromptChart rows={speedByPrompt} pickerColor={PICKER_COLOR} />
+		</section>
+	{/if}
+
 	<section>
 		<h2>Details</h2>
 		<div class="table">
@@ -175,7 +201,8 @@
 	.summary {
 		display: flex;
 		gap: var(--pad-xl);
-		margin: 0;
+		margin: var(--vs-l) 0;
+		justify-content: center;
 	}
 	.summary div {
 		display: flex;

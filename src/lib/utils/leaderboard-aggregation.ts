@@ -138,6 +138,95 @@ export function aggregatePickerLeaderboard(
 	return rows;
 }
 
+// Per-prompt timing, keyed by the authored prompt_text. Used to surface
+// prompts where multiple pickers struggled (or diverged) across the session
+// history. Only prompts covered by ≥2 pickers are returned — a prompt with a
+// single picker's data has no comparative signal. Within a returned row,
+// `pickers` includes every picker in STUDY_PICKERS (run_count=0 when that
+// picker hasn't seen this prompt yet) so chart code can rely on a stable
+// ordering and skip zero-count bars explicitly.
+export type PromptTimingRow = {
+	prompt_text: string;
+	challenge_group_id: string;
+	challenge_group_label: string;
+	pickers: PickerCategoryTiming[];
+	// Max mean_ms across pickers with run_count > 0. 0 when nobody has a run.
+	// Pre-computed so the chart layout can size the x-axis without re-walking.
+	max_mean_ms: number;
+};
+
+const MIN_PICKERS_PER_PROMPT = 2;
+
+export function aggregateSpeedByPrompt(
+	sessions: readonly (LoadedStudySession | null)[]
+): PromptTimingRow[] {
+	type PromptAcc = {
+		challenge_group_id: string;
+		pickers: Map<string, { sum: number; count: number }>;
+	};
+
+	const prompts = new Map<string, PromptAcc>();
+
+	for (const session of sessions) {
+		if (!session) continue;
+		for (const round of session.rounds) {
+			if (!round) continue;
+			const pickerId = round.picker_id;
+			for (const run of round.runs) {
+				if (!run) continue;
+				if (run.elapsed_ms === undefined) continue;
+				let acc = prompts.get(run.prompt_text);
+				if (!acc) {
+					acc = {
+						challenge_group_id: run.challenge_group_id,
+						pickers: new Map()
+					};
+					prompts.set(run.prompt_text, acc);
+				}
+				const pickerAcc = acc.pickers.get(pickerId) ?? { sum: 0, count: 0 };
+				pickerAcc.sum += run.elapsed_ms;
+				pickerAcc.count += 1;
+				acc.pickers.set(pickerId, pickerAcc);
+			}
+		}
+	}
+
+	const groupLabelById = new Map(
+		STUDY_CHALLENGE_GROUPS.map((group) => [group.id, group.label])
+	);
+
+	const rows: PromptTimingRow[] = [];
+	for (const [promptText, acc] of prompts) {
+		if (acc.pickers.size < MIN_PICKERS_PER_PROMPT) continue;
+
+		const pickerTimings: PickerCategoryTiming[] = STUDY_PICKERS.map((picker) => {
+			const data = acc.pickers.get(picker.id) ?? { sum: 0, count: 0 };
+			return {
+				picker_id: picker.id,
+				picker_label: picker.label,
+				mean_ms: data.count === 0 ? 0 : data.sum / data.count,
+				run_count: data.count
+			};
+		});
+
+		const maxMean = pickerTimings.reduce(
+			(max, p) => (p.run_count > 0 && p.mean_ms > max ? p.mean_ms : max),
+			0
+		);
+
+		rows.push({
+			prompt_text: promptText,
+			challenge_group_id: acc.challenge_group_id,
+			challenge_group_label: groupLabelById.get(acc.challenge_group_id) ?? acc.challenge_group_id,
+			pickers: pickerTimings,
+			max_mean_ms: maxMean
+		});
+	}
+
+	rows.sort((a, b) => b.max_mean_ms - a.max_mean_ms);
+	return rows;
+}
+
 export function getRatingForDimension(
 	row: PickerLeaderboardRow,
 	dimension: RatingDimension

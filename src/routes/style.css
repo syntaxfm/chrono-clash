@@ -13,7 +13,7 @@
 	box-shadow: var(--shadow-4);
 	border-radius: var(--br-l);
 	background: var(--white);
-	margin: var(--vs-xl) auto;
+	margin: var(--vs-l) auto;
 }
 
 .big-boi {
@@ -68,7 +68,9 @@ a:not(.button) {
 	text-decoration: none;
 	&:hover {
 		text-decoration-line: underline;
-		text-decoration-thickness: 4px;
+		text-decoration-thickness: 3px;
+		text-decoration-style: solid;
+		text-decoration-color: var(--green);
 	}
 }
 

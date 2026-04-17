@@ -151,6 +151,6 @@
 	}
 
 	.status {
-		
+		text-align: center;
 	}
 </style>
