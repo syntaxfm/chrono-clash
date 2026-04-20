@@ -13,9 +13,12 @@ export const RateDateAccountRoot = co.map({
 	study_session_index: StudySessionIndex
 });
 
-// Initialize the root on account creation. `creationProps` is only defined
-// on the very first run for an account; subsequent logins skip straight
-// through, so there's no idempotency guard to maintain.
+// Only runs on first account creation. Never writes to root on subsequent
+// logins — previously we "healed" missing fields here, which could overwrite
+// a ref whose target CoValue was transiently unreachable, losing the pointer
+// to real data. If a required field is ever missing on an existing root,
+// surface the error in the UI (see /admin/recovery) rather than papering
+// over it with a write.
 export const RateDateAccount = co
 	.account({
 		profile: co.profile(),

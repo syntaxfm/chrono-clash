@@ -47,6 +47,9 @@ export function isRangeStudyTargetValue(value: string): boolean {
 // normalizePlainDateKey for single dates; for ranges, splits on "/",
 // normalizes each half, and rejoins. Returns null on any malformed half so
 // the runner treats partial/invalid emissions as "not yet a candidate".
+// A same-day range (start === end) collapses to a single date key so pickers
+// that represent single selections as "YYYY-MM-DD/YYYY-MM-DD" compare equal
+// to single-date challenge targets authored as "YYYY-MM-DD".
 export function normalizeStudyTargetValue(value: string): string | null {
 	if (!isRangeStudyTargetValue(value)) {
 		return normalizePlainDateKey(value);
@@ -56,5 +59,6 @@ export function normalizeStudyTargetValue(value: string): string | null {
 	const start = normalizePlainDateKey(parts[0]);
 	const end = normalizePlainDateKey(parts[1]);
 	if (start === null || end === null) return null;
+	if (start === end) return start;
 	return `${start}/${end}`;
 }

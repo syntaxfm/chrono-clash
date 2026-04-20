@@ -17,6 +17,7 @@
 	<nav>
 		<a href={resolve('/admin')}>Sessions</a>
 		<a href={resolve('/admin/leaderboard')}>Leaderboard</a>
+		<a href={resolve('/admin/data')}>Data</a>
 	</nav>
 </header>
 
