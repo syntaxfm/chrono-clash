@@ -10,47 +10,17 @@ import { browser } from '$app/environment';
 // client-side after hydration, and module evaluation order guarantees this
 // side effect dispatches before component mount.
 
-// Picker bundles that ship as self-contained scripts and are loaded from
-// /static instead of imported. This is required for bundles Vite's parser
-// can't process (e.g. certain minifier outputs). The bundle's <script
-// type="module"> execution is what calls customElements.define(tag, ...),
-// so after the script loads we just wait for `whenDefined` on the study
-// tag — no subclassing needed.
-const EXTERNAL_PICKER_BUNDLES: Record<string, string> = {
-	hot_date: '/pickers/hot-date.js'
+// Real picker packages register their custom-element tag as a side effect of
+// being imported (customElements.define runs at module top level). We load
+// them via dynamic import so SSR never touches DOM APIs, and because each
+// package's self-registered tag matches the tag we derive in adapter.ts no
+// subclassing is needed — `customElements.whenDefined(tag)` just confirms the
+// registration before the runner mounts the tag.
+const SELF_REGISTERING_PICKER_MODULES: Record<string, () => Promise<unknown>> = {
+	hot_date: () => import('@stolinski/hot-date'),
+	date_range_picker: () => import('@wesbos/date-range-picker'),
+	magic_date_picker: () => import('@w3cj/magic-date-picker')
 };
-
-async function loadExternalPickerBundle(src: string): Promise<void> {
-	const existing = document.querySelector<HTMLScriptElement>(`script[data-picker-bundle="${src}"]`);
-	if (existing) {
-		if (existing.dataset.loaded === 'true') return;
-		await new Promise<void>((resolve, reject) => {
-			existing.addEventListener('load', () => resolve(), { once: true });
-			existing.addEventListener('error', () => reject(new Error(`failed to load ${src}`)), {
-				once: true
-			});
-		});
-		return;
-	}
-	await new Promise<void>((resolve, reject) => {
-		const script = document.createElement('script');
-		script.type = 'module';
-		script.src = src;
-		script.dataset.pickerBundle = src;
-		script.addEventListener(
-			'load',
-			() => {
-				script.dataset.loaded = 'true';
-				resolve();
-			},
-			{ once: true }
-		);
-		script.addEventListener('error', () => reject(new Error(`failed to load ${src}`)), {
-			once: true
-		});
-		document.head.appendChild(script);
-	});
-}
 
 async function registerStudyPickers(): Promise<void> {
 	const [{ STUDY_PICKERS }, { getPickerTagForId }, { PlaceholderDatePicker }] = await Promise.all([
@@ -63,12 +33,9 @@ async function registerStudyPickers(): Promise<void> {
 		const tag = getPickerTagForId(picker.id);
 		if (customElements.get(tag)) continue;
 
-		const bundleSrc = EXTERNAL_PICKER_BUNDLES[picker.id];
-		if (bundleSrc) {
-			await loadExternalPickerBundle(bundleSrc);
-			// Bundle has already called customElements.define(tag) on its
-			// own; whenDefined just confirms the registration before the
-			// runner mounts the tag.
+		const loader = SELF_REGISTERING_PICKER_MODULES[picker.id];
+		if (loader) {
+			await loader();
 			await customElements.whenDefined(tag);
 			continue;
 		}

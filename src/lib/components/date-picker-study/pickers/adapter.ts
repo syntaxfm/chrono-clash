@@ -2,10 +2,11 @@ import { STUDY_PICKERS } from '$lib/components/date-picker-study/pickers/catalog
 
 // Map a stable picker_id (hot_date) to its custom-element tag (hot-date).
 // Custom-element names require a hyphen; picker_ids are snake_case, so
-// replacing underscores yields a valid tag that matches the picker bundle's
-// natural name. External bundles (like hot-date.js) self-register under that
-// same tag, so our derived tag composes directly with the bundle's own
-// registration — no extra subclassing required.
+// replacing underscores yields a valid tag that matches each packaged
+// picker's natural name. Picker packages (e.g. @stolinski/hot-date,
+// @wesbos/date-range-picker) self-register under that same tag on import,
+// so our derived tag composes directly with the package's own registration
+// — no extra subclassing required.
 //
 // The mapping is derived from STUDY_PICKERS rather than hand-maintained so
 // adding a fourth picker (unlikely given the within-subject design, but

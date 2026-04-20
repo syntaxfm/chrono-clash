@@ -11,8 +11,8 @@
 // `id`.
 export const STUDY_PICKERS = [
 	{ id: 'hot_date', label: 'Hot Date' },
-	{ id: 'input_b', label: 'Input B' },
-	{ id: 'input_c', label: 'Input C' }
+	{ id: 'date_range_picker', label: 'Date Range Picker' },
+	{ id: 'magic_date_picker', label: 'Magic Date Picker' }
 ] as const;
 
 export const STUDY_INPUT_COUNT = STUDY_PICKERS.length;

@@ -1,5 +1,5 @@
 import { STUDY_TARGET_VALUE_REGEX } from '$lib/components/date-picker-study/schema';
-import { addDays, addMonths, addWeeks, addYears, nextWeekday } from '$lib/utils/date-math';
+import { addDays, addMonths, addWeeks, addYears } from '$lib/utils/date-math';
 
 // Authored challenge groups for the study. Each group is a themed batch of
 // prompts at similar difficulty; the admin session factory picks 3 of these
@@ -34,9 +34,6 @@ export type StudyChallengeGroupDefinition = {
 // because each round draws a different variation per category, indexed by
 // round_index (round 0 → challenge[0], round 1 → challenge[1], …).
 const MIN_CHALLENGES_PER_GROUP = 3;
-
-const MONDAY = 1;
-const FRIDAY = 5;
 
 const RAW_CHALLENGE_GROUPS = [
 	{
@@ -75,8 +72,8 @@ const RAW_CHALLENGE_GROUPS = [
 		label: 'Relative Time',
 		challenges: [
 			{
-				prompt: 'Nine days after next Monday',
-				target_date_iso: (now: Date) => addDays(nextWeekday(now, MONDAY), 9)
+				prompt: 'Ten days from today',
+				target_date_iso: (now: Date) => addDays(now, 10)
 			},
 			{
 				prompt: 'Two weeks from today',
@@ -87,8 +84,8 @@ const RAW_CHALLENGE_GROUPS = [
 				target_date_iso: (now: Date) => addMonths(now, 1)
 			},
 			{
-				prompt: 'Five days before next Friday',
-				target_date_iso: (now: Date) => addDays(nextWeekday(now, FRIDAY), -5)
+				prompt: 'Two months from today',
+				target_date_iso: (now: Date) => addMonths(now, 2)
 			},
 			{
 				prompt: 'Three weeks from today',
