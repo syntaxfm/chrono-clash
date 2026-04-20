@@ -21,8 +21,8 @@ importers:
         specifier: ^7.2.8
         version: 7.2.8(@sveltejs/kit@2.57.1(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.55.3(@typescript-eslint/types@8.58.1))(vite@8.0.8(@types/node@24.12.2)(esbuild@0.27.3)(terser@5.46.1)(yaml@2.8.3)))(svelte@5.55.3(@typescript-eslint/types@8.58.1))(typescript@6.0.2)(vite@8.0.8(@types/node@24.12.2)(esbuild@0.27.3)(terser@5.46.1)(yaml@2.8.3)))(wrangler@4.83.0(@cloudflare/workers-types@4.20260416.2))
       '@w3cj/magic-date-picker':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.1.1
+        version: 0.1.1
       '@wesbos/date-range-picker':
         specifier: ^0.1.0
         version: 0.1.0(@types/node@24.12.2)(lightningcss@1.32.0)(react@19.2.5)(terser@5.46.1)(ws@8.18.0)(yaml@2.8.3)
@@ -1578,8 +1578,8 @@ packages:
     resolution: {integrity: sha512-y+vH7QE8ycjoa0bWciFg7OpFcipUuem1ujhrdLtq1gByKwfbC7bPeKsiny9e0urg93DqwGcHey+bGRKCnF1nZQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@w3cj/magic-date-picker@0.0.4':
-    resolution: {integrity: sha512-pz3LzC5bFfO00Rr0k0SwyMHUXYyqszgDFdgAb/bMJ7c39RG7eJZAjm4eTt4MMxol3gdlLhQD3sWKx45/hZMwlg==}
+  '@w3cj/magic-date-picker@0.1.1':
+    resolution: {integrity: sha512-CLqfUeA4zq2OFpKZ0eIqUzKd7Lf4aKr0+wXj4Uo1OuzegIoFb3xnnxGYgkovAmgwjdDTRN2DDWvTxrIqQC7+eQ==}
 
   '@wesbos/date-range-picker@0.1.0':
     resolution: {integrity: sha512-I1pN584WmfYF482Jdznh0d2jpeXqGSkFAh0Ap2PErSl68zYXBmb/SPytFIgOHii2EGyP9SYxmJCcdLGup3HrIA==}
@@ -4957,7 +4957,7 @@ snapshots:
       '@typescript-eslint/types': 8.58.1
       eslint-visitor-keys: 5.0.1
 
-  '@w3cj/magic-date-picker@0.0.4':
+  '@w3cj/magic-date-picker@0.1.1':
     dependencies:
       chrono-node: 2.9.0
       date-fns: 4.1.0
