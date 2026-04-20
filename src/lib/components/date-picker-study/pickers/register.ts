@@ -19,7 +19,7 @@ import { browser } from '$app/environment';
 const SELF_REGISTERING_PICKER_MODULES: Record<string, () => Promise<unknown>> = {
 	hot_date: () => import('@stolinski/hot-date'),
 	date_range_picker: () => import('@wesbos/date-range-picker'),
-	magic_date_picker: () => import('@w3cj/magic-date-picker')
+	magic_date_picker: () => import('@w3cj/magic-date-picker/bundled')
 };
 
 async function registerStudyPickers(): Promise<void> {
