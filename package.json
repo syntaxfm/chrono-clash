@@ -41,7 +41,7 @@
 		"@sentry/sveltekit": "^10.49.0",
 		"@stolinski/hot-date": "^0.1.2",
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
-		"@w3cj/magic-date-picker": "^0.0.3",
+		"@w3cj/magic-date-picker": "^0.0.4",
 		"@wesbos/date-range-picker": "^0.1.0",
 		"d3-array": "^3.2.4",
 		"d3-scale": "^4.0.2",
