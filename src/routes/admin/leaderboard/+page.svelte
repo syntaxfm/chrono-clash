@@ -13,12 +13,28 @@
 		aggregatePickerLeaderboard,
 		aggregateSpeedByCategory,
 		aggregateSpeedByPrompt,
-		computeOutlierBoundsByPicker
+		computeOutlierBoundsByPicker,
+		RATING_DIMENSIONS,
+		RATING_DIMENSION_LABEL
 	} from '$lib/utils/leaderboard-aggregation';
 
 	const me = new AccountCoState(RateDateAccount, { resolve: RATE_DATE_ACCOUNT_RESOLVE });
 
 	let excludeOutliers = $state(false);
+
+	let revealed = $state<{
+		rating: Record<string, boolean>;
+		speed: boolean;
+		speedCategory: boolean;
+		speedPrompt: boolean;
+		composite: boolean;
+	}>({
+		rating: {},
+		speed: false,
+		speedCategory: false,
+		speedPrompt: false,
+		composite: false
+	});
 
 	const outlierBounds = $derived.by(() => {
 		if (!excludeOutliers) return undefined;
@@ -100,12 +116,6 @@
 	</label>
 
 	<section>
-		<h2>Composite score</h2>
-		<p class="hint">Sum of design, ease of use, and magicalness means — out of 15.</p>
-		<CompositeBarChart rows={ranked} pickerColor={PICKER_COLOR} />
-	</section>
-
-	<section>
 		<h2>Rating breakdown</h2>
 		<p class="hint">Mean rating per dimension across every completed round.</p>
 		<div class="legend">
@@ -116,13 +126,30 @@
 				</span>
 			{/each}
 		</div>
-		<RatingsBarChart rows={ranked} pickerColor={PICKER_COLOR} />
+		<div class="rating-grid">
+			{#each RATING_DIMENSIONS as dim (dim)}
+				<div class="rating-panel">
+					<h3>{RATING_DIMENSION_LABEL[dim]}</h3>
+					<div class="reveal" class:revealed={revealed.rating[dim]}>
+						<RatingsBarChart rows={ranked} pickerColor={PICKER_COLOR} dimension={dim} />
+						{#if !revealed.rating[dim]}
+							<button class="reveal-btn" onclick={() => (revealed.rating[dim] = true)}>Reveal</button>
+						{/if}
+					</div>
+				</div>
+			{/each}
+		</div>
 	</section>
 
 	<section>
 		<h2>Overall speed</h2>
 		<p class="hint">Mean time per challenge — shorter is better.</p>
-		<SpeedBarChart rows={ranked} pickerColor={PICKER_COLOR} />
+		<div class="reveal" class:revealed={revealed.speed}>
+			<SpeedBarChart rows={ranked} pickerColor={PICKER_COLOR} />
+			{#if !revealed.speed}
+				<button class="reveal-btn" onclick={() => (revealed.speed = true)}>Reveal</button>
+			{/if}
+		</div>
 	</section>
 
 	{#if speedByCategory.length > 0}
@@ -137,7 +164,13 @@
 					</span>
 				{/each}
 			</div>
-			<SpeedByCategoryChart rows={speedByCategory} pickerColor={PICKER_COLOR} />
+			<div class="reveal" class:revealed={revealed.speedCategory}>
+				<SpeedByCategoryChart rows={speedByCategory} pickerColor={PICKER_COLOR} />
+				{#if !revealed.speedCategory}
+					<button class="reveal-btn" onclick={() => (revealed.speedCategory = true)}>Reveal</button
+					>
+				{/if}
+			</div>
 		</section>
 	{/if}
 
@@ -155,9 +188,25 @@
 					</span>
 				{/each}
 			</div>
-			<SpeedByPromptChart rows={speedByPrompt} pickerColor={PICKER_COLOR} />
+			<div class="reveal" class:revealed={revealed.speedPrompt}>
+				<SpeedByPromptChart rows={speedByPrompt} pickerColor={PICKER_COLOR} />
+				{#if !revealed.speedPrompt}
+					<button class="reveal-btn" onclick={() => (revealed.speedPrompt = true)}>Reveal</button>
+				{/if}
+			</div>
 		</section>
 	{/if}
+
+	<section>
+		<h2>Composite score</h2>
+		<p class="hint">Sum of design, ease of use, and magicalness means — out of 15.</p>
+		<div class="reveal" class:revealed={revealed.composite}>
+			<CompositeBarChart rows={ranked} pickerColor={PICKER_COLOR} />
+			{#if !revealed.composite}
+				<button class="reveal-btn" onclick={() => (revealed.composite = true)}>Reveal</button>
+			{/if}
+		</div>
+	</section>
 
 	<section>
 		<h2>Details</h2>
@@ -262,5 +311,40 @@
 		margin-block-end: var(--pad-l);
 		cursor: pointer;
 		user-select: none;
+	}
+	.rating-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--pad-l);
+	}
+	.rating-panel h3 {
+		margin: 0 0 var(--pad-s);
+		font-size: 1rem;
+	}
+	.reveal {
+		position: relative;
+	}
+	.reveal > :global(*:not(.reveal-btn)) {
+		filter: blur(14px);
+		transition: filter 0.3s ease;
+		pointer-events: none;
+	}
+	.reveal.revealed > :global(*:not(.reveal-btn)) {
+		filter: none;
+		pointer-events: auto;
+	}
+	.reveal-btn {
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		width: fit-content;
+		height: fit-content;
+		padding: var(--pad-s) var(--pad-l);
+		background: var(--gray-1, oklch(0.98 0 0));
+		color: var(--gray-9, oklch(0.2 0 0));
+		border: 1px solid var(--gray-4, oklch(0.85 0 0));
+		border-radius: 999px;
+		font-weight: 600;
+		cursor: pointer;
 	}
 </style>

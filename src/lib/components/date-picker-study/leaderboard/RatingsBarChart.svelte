@@ -6,15 +6,21 @@
 		RATING_DIMENSIONS,
 		RATING_DIMENSION_LABEL,
 		getRatingForDimension,
-		type PickerLeaderboardRow
+		type PickerLeaderboardRow,
+		type RatingDimension
 	} from '$lib/utils/leaderboard-aggregation';
 
 	import RatingsChartBody from './RatingsChartBody.svelte';
 
 	let {
 		rows,
-		pickerColor
-	}: { rows: PickerLeaderboardRow[]; pickerColor: Record<string, string> } = $props();
+		pickerColor,
+		dimension
+	}: {
+		rows: PickerLeaderboardRow[];
+		pickerColor: Record<string, string>;
+		dimension?: RatingDimension;
+	} = $props();
 
 	type FlatPoint = {
 		dimension: string;
@@ -23,8 +29,12 @@
 		value: number;
 	};
 
+	const dims = $derived<readonly RatingDimension[]>(
+		dimension ? [dimension] : RATING_DIMENSIONS
+	);
+
 	const flat = $derived<FlatPoint[]>(
-		RATING_DIMENSIONS.flatMap((dim) =>
+		dims.flatMap((dim) =>
 			rows.map((r) => ({
 				dimension: RATING_DIMENSION_LABEL[dim],
 				picker_id: r.picker_id,
