@@ -40,11 +40,72 @@ export const RATING_DIMENSION_LABEL: Record<RatingDimension, string> = {
 	magicalness: 'Magicalness'
 };
 
+// Per-picker lower/upper bounds for elapsed_ms. Runs outside the range are
+// treated as outliers by the speed aggregators when this map is supplied.
+export type OutlierBoundsByPicker = Map<string, { lower: number; upper: number }>;
+
+function quantile(sorted: readonly number[], q: number): number {
+	const pos = (sorted.length - 1) * q;
+	const base = Math.floor(pos);
+	const rest = pos - base;
+	const next = sorted[base + 1];
+	if (next !== undefined) return sorted[base] + rest * (next - sorted[base]);
+	return sorted[base];
+}
+
+// IQR-based outlier bounds per picker across every recorded run. Pickers with
+// fewer than 4 samples get unbounded ranges — IQR isn't meaningful on tiny
+// samples and we'd rather keep all their data than drop it on noise.
+export function computeOutlierBoundsByPicker(
+	sessions: readonly (LoadedStudySession | null)[]
+): OutlierBoundsByPicker {
+	const samples = new Map<string, number[]>();
+	for (const session of sessions) {
+		if (!session) continue;
+		for (const round of session.rounds) {
+			if (!round) continue;
+			for (const run of round.runs) {
+				if (!run) continue;
+				if (run.elapsed_ms === undefined) continue;
+				const arr = samples.get(round.picker_id) ?? [];
+				arr.push(run.elapsed_ms);
+				samples.set(round.picker_id, arr);
+			}
+		}
+	}
+
+	const bounds: OutlierBoundsByPicker = new Map();
+	for (const [pickerId, arr] of samples) {
+		if (arr.length < 4) {
+			bounds.set(pickerId, { lower: -Infinity, upper: Infinity });
+			continue;
+		}
+		const sorted = [...arr].sort((a, b) => a - b);
+		const q1 = quantile(sorted, 0.25);
+		const q3 = quantile(sorted, 0.75);
+		const iqr = q3 - q1;
+		bounds.set(pickerId, { lower: q1 - 1.5 * iqr, upper: q3 + 1.5 * iqr });
+	}
+	return bounds;
+}
+
+function isOutlier(
+	bounds: OutlierBoundsByPicker | undefined,
+	pickerId: string,
+	elapsedMs: number
+): boolean {
+	if (!bounds) return false;
+	const b = bounds.get(pickerId);
+	if (!b) return false;
+	return elapsedMs < b.lower || elapsedMs > b.upper;
+}
+
 // Rating fields are optional on the schema — an in-progress round may have
 // only two of three set. Partial ratings still count for the dimensions that
 // are filled; they do NOT contribute to missing dimensions.
 export function aggregatePickerLeaderboard(
-	sessions: readonly (LoadedStudySession | null)[]
+	sessions: readonly (LoadedStudySession | null)[],
+	outlierBounds?: OutlierBoundsByPicker
 ): PickerLeaderboardRow[] {
 	type Acc = {
 		picker_label: string;
@@ -106,6 +167,7 @@ export function aggregatePickerLeaderboard(
 				acc.runs_total += 1;
 				if (run.is_correct) acc.runs_correct += 1;
 				if (run.elapsed_ms !== undefined) {
+					if (isOutlier(outlierBounds, round.picker_id, run.elapsed_ms)) continue;
 					acc.elapsed_sum += run.elapsed_ms;
 					acc.elapsed_count += 1;
 				}
@@ -158,7 +220,8 @@ export type PromptTimingRow = {
 const MIN_PICKERS_PER_PROMPT = 2;
 
 export function aggregateSpeedByPrompt(
-	sessions: readonly (LoadedStudySession | null)[]
+	sessions: readonly (LoadedStudySession | null)[],
+	outlierBounds?: OutlierBoundsByPicker
 ): PromptTimingRow[] {
 	type PromptAcc = {
 		challenge_group_id: string;
@@ -175,6 +238,7 @@ export function aggregateSpeedByPrompt(
 			for (const run of round.runs) {
 				if (!run) continue;
 				if (run.elapsed_ms === undefined) continue;
+				if (isOutlier(outlierBounds, pickerId, run.elapsed_ms)) continue;
 				let acc = prompts.get(run.prompt_text);
 				if (!acc) {
 					acc = {
@@ -258,7 +322,8 @@ export type CategoryTimingRow = {
 // (mean_ms=0, run_count=0 when a picker hasn't been tried on that category),
 // so the caller can rely on a stable picker order per row for charts.
 export function aggregateSpeedByCategory(
-	sessions: readonly (LoadedStudySession | null)[]
+	sessions: readonly (LoadedStudySession | null)[],
+	outlierBounds?: OutlierBoundsByPicker
 ): CategoryTimingRow[] {
 	const groups = new Map<string, Map<string, { sum: number; count: number }>>();
 
@@ -270,6 +335,7 @@ export function aggregateSpeedByCategory(
 			for (const run of round.runs) {
 				if (!run) continue;
 				if (run.elapsed_ms === undefined) continue;
+				if (isOutlier(outlierBounds, pickerId, run.elapsed_ms)) continue;
 				const groupId = run.challenge_group_id;
 				let pickerMap = groups.get(groupId);
 				if (!pickerMap) {

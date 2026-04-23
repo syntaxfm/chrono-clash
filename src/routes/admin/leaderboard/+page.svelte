@@ -12,27 +12,37 @@
 	import {
 		aggregatePickerLeaderboard,
 		aggregateSpeedByCategory,
-		aggregateSpeedByPrompt
+		aggregateSpeedByPrompt,
+		computeOutlierBoundsByPicker
 	} from '$lib/utils/leaderboard-aggregation';
 
 	const me = new AccountCoState(RateDateAccount, { resolve: RATE_DATE_ACCOUNT_RESOLVE });
 
+	let excludeOutliers = $state(false);
+
+	const outlierBounds = $derived.by(() => {
+		if (!excludeOutliers) return undefined;
+		const cur = me.current;
+		if (!cur?.$isLoaded) return undefined;
+		return computeOutlierBoundsByPicker(cur.root.study_session_index.sessions);
+	});
+
 	const rows = $derived.by(() => {
 		const cur = me.current;
 		if (!cur?.$isLoaded) return [];
-		return aggregatePickerLeaderboard(cur.root.study_session_index.sessions);
+		return aggregatePickerLeaderboard(cur.root.study_session_index.sessions, outlierBounds);
 	});
 
 	const speedByCategory = $derived.by(() => {
 		const cur = me.current;
 		if (!cur?.$isLoaded) return [];
-		return aggregateSpeedByCategory(cur.root.study_session_index.sessions);
+		return aggregateSpeedByCategory(cur.root.study_session_index.sessions, outlierBounds);
 	});
 
 	const speedByPrompt = $derived.by(() => {
 		const cur = me.current;
 		if (!cur?.$isLoaded) return [];
-		return aggregateSpeedByPrompt(cur.root.study_session_index.sessions);
+		return aggregateSpeedByPrompt(cur.root.study_session_index.sessions, outlierBounds);
 	});
 
 	const ranked = $derived([...rows].sort((a, b) => b.composite_score - a.composite_score));
@@ -83,6 +93,11 @@
 			<dd>{totalSamples}</dd>
 		</div>
 	</dl>
+
+	<label class="filter">
+		<input type="checkbox" bind:checked={excludeOutliers} />
+		Exclude speed outliers
+	</label>
 
 	<section>
 		<h2>Composite score</h2>
@@ -239,5 +254,13 @@
 		width: 0.75em;
 		height: 0.75em;
 		border-radius: 999px;
+	}
+	.filter {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--pad-s);
+		margin-block-end: var(--pad-l);
+		cursor: pointer;
+		user-select: none;
 	}
 </style>

@@ -9,7 +9,7 @@
 }
 
 .admin-layout {
-	padding: var(--pad-xl);
+	padding: 55px;
 	box-shadow: var(--shadow-4);
 	border-radius: var(--br-l);
 	background: var(--white);
